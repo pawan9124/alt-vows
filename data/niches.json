@@ -1,0 +1,23 @@
+[
+    {
+        "slug": "rock-n-roll-wedding",
+        "title": "Rock & Roll Wedding Invitations",
+        "metaDescription": "Edgy, vinyl-inspired invites for the ultimate rock couple.",
+        "archetypeId": "vintage-vinyl",
+        "h1": "For Those About to Rock",
+        "color": "#e02e2e",
+        "names": "Axel & Rose"
+    },
+    {
+        "slug": "jazz-lounge-wedding",
+        "title": "Jazz Lounge Wedding Invitations",
+        "metaDescription": "Smooth, elegant vinyl invites for a classy evening.",
+        "archetypeId": "vintage-vinyl",
+        "h1": "A Night of Smooth Jazz",
+        "color": "#d4af37",
+        "names": "Miles & Ella",
+        "recordTexture": "/themes/vintage-vinyl/gold_label.png",
+        "audioTrack": "/themes/vintage-vinyl/jazz_demo.mp3",
+        "backgroundTexture": "/themes/vintage-vinyl/jazz_bg.png"
+    }
+]

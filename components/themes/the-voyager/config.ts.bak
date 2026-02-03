@@ -1,0 +1,39 @@
+import { ThemeConfig } from '../../types/theme';
+
+// Placeholder imports - User will replace these files in the assets folder
+import bgVideo from './assets/living_desk.mp4';
+import passportCover from './assets/passport_texture.png'; // Using as texture
+import boardingPass from './assets/boarding_pass_texture.png'; // Using as texture
+import postmarkMask from './assets/postmark_mask.png';
+import couplePhoto from './assets/couple_placeholder.jpg';
+
+export const theVoyagerConfig: ThemeConfig = {
+    id: "the-voyager",
+    name: "The Voyager",
+    schema: [
+        {
+            section: 'hero',
+            label: 'Passport Scene',
+            fields: [
+                { key: 'names', label: 'Couple Names', type: 'text', placeholder: 'Jack & Rose' },
+                { key: 'date', label: 'Flight Date', type: 'text', placeholder: 'OCT 14, 1924' },
+                { key: 'location', label: 'Destination', type: 'text', placeholder: 'LONDON - PARIS' },
+                { key: 'couplePhoto', label: 'Passport Photo', type: 'image' },
+                { key: 'buttonText', label: 'Button Text', type: 'text', placeholder: 'BOARD FLIGHT' },
+            ]
+        }
+    ],
+    defaultContent: {
+        hero: {
+            names: "Alexander & Isabella",
+            date: "APRIL 14, 2026",
+            location: "LAKE COMO, ITALY",
+            couplePhoto: couplePhoto,
+            buttonText: "BOARD FLIGHT",
+            bgVideo: bgVideo,
+            passportCover: passportCover,
+            boardingPass: boardingPass,
+            postmarkMask: postmarkMask,
+        }
+    }
+};
