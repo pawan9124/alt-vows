@@ -1,16 +1,76 @@
+export type ThemeVibe = 'classic' | 'dark' | 'luxury' | 'fresh' | 'fun';
+
+// 1. Define the Global DNA
+export interface GlobalThemeConfig {
+  palette: {
+    primary: string;    // Main brand color
+    secondary: string;  // Contrast/Dark color
+    text: string;       // Text color
+  };
+  typography: {
+    headingFont: string; // e.g., "Metal Mania"
+    bodyFont: string;    // e.g., "Inter"
+  };
+  assets: {
+    recordTexture: string; // The vinyl record image
+    cursor?: string;       // Optional custom cursor
+  };
+}
+
+// 2. Define Page-Specific Configs
+export interface LandingPageConfig {
+  mode: 'split-screen' | 'centered';
+  backgroundValue: string; // URL to poster image or hex color
+  overlayOpacity?: number;
+  titleSize?: 'normal' | 'huge';
+}
+
+export interface GatekeeperConfig {
+  // Background Layer
+  backgroundTexture?: string;  // e.g., Concrete URL
+  backgroundColor?: string;    // Fallback color
+
+  // The Halo Layer (Behind Card)
+  showVinylBackdrop?: boolean; // If true, render a record behind the card
+  neonColor?: string;          // e.g., "#e02e2e" (The glow color)
+
+  // The Card Layer
+  cardTexture?: string;        // e.g., Leather URL
+  cardColor?: string;          // Fallback color
+  cardShape?: 'square' | 'rounded';
+  cornerAsset?: string;        // URL to Spike/Fan decoration
+
+  // The Button
+  buttonStyle?: 'solid' | 'glow' | 'outline';
+  buttonShape?: 'pill' | 'rectangle' | 'rounded';
+  buttonColor?: string;        // Uses global primary if undefined
+}
+
+export interface PlayerConfig {
+  backgroundValue: string; // Readable texture for lyrics
+  layout: 'standard' | 'minimal';
+}
+
 export interface VinylThemeConfig {
+  slug: string; // <--- Added for navigation
   hero: {
     names: string;
     title: string;
     date: string;
     location: string;
   };
-  style: {
-    primaryColor: string;
-    fontFamily: string;
-    recordTexture: string;
-    audioTrack: string;
-    backgroundTexture?: string;
+  // NEW STYLE CONFIG
+  theme: {
+    global: GlobalThemeConfig;
+    pages: {
+      landing: LandingPageConfig;
+      gatekeeper: GatekeeperConfig;
+      player: PlayerConfig;
+    };
+  };
+  style?: { // Keeping optional style for backward compatibility if needed temporarily, but goal is to move to theme
+    // Deprecated properties might be accessed by old code, but we are refactoring index.tsx too.
+    // Let's remove them to force errors and fix index.tsx
   };
   story: {
     title: string;
@@ -42,18 +102,47 @@ export interface VinylThemeConfig {
 }
 
 export const defaultContent: VinylThemeConfig = {
+  slug: 'default',
   hero: {
     names: "Alex & Sam",
     title: "Side A: The Beginning",
     date: "OCT 31, 2026",
     location: "The Velvet Underground"
   },
-  style: {
-    primaryColor: "#000000",      // Default: Black
-    fontFamily: "Inter",          // Default: Clean font
-    recordTexture: "/themes/vintage-vinyl/record.png",
-    audioTrack: "/themes/vintage-vinyl/music.mp3",
-    backgroundTexture: ""
+  theme: {
+    global: {
+      palette: {
+        primary: "#000000",
+        secondary: "#ffffff",
+        text: "#000000" // Default text
+      },
+      typography: {
+        headingFont: "Inter",
+        bodyFont: "Inter"
+      },
+      assets: {
+        recordTexture: "/themes/vintage-vinyl/record.png"
+      }
+    },
+    pages: {
+      landing: {
+        mode: "centered",
+        backgroundValue: "#f0f0f0", // Default bg
+        overlayOpacity: 0.5,
+        titleSize: "normal"
+      },
+      gatekeeper: {
+        backgroundColor: "#2c241b",
+        cardColor: "#f9f5eb",
+        cardShape: "rounded",
+        buttonShape: "rounded",
+        buttonStyle: "solid"
+      },
+      player: {
+        backgroundValue: "#ffffff",
+        layout: "standard"
+      }
+    }
   },
   story: {
     title: "Liner Notes",
@@ -91,28 +180,82 @@ export const defaultContent: VinylThemeConfig = {
   }
 };
 
+const VIBE_STYLES: Record<ThemeVibe, { envelope: string; paper: string; accent: string }> = {
+  classic: { envelope: "#2c241b", paper: "#f9f5eb", accent: "#d4af37" },
+  dark: { envelope: "#1a1a1a", paper: "#333333", accent: "#dc2626" },
+  luxury: { envelope: "#0f172a", paper: "#e2e8f0", accent: "#fbbf24" },
+  fresh: { envelope: "#3f4d3f", paper: "#fafaf9", accent: "#a3b18a" },
+  fun: { envelope: "#be185d", paper: "#fff1f2", accent: "#f472b6" },
+};
+
 // THE MERGE FUNCTION
 // This maps flat JSON data (from niches.json) into the nested Config structure
 export function mergeConfig(nicheData: any): VinylThemeConfig {
   // If nicheData is null or undefined, use defaults
   if (!nicheData) return defaultContent;
 
+  if (nicheData.theme) {
+    // If the data already has the new 'theme' structure (like our updated Rock & Roll entry), use it.
+    // We still merge with defaultContent to ensure completeness.
+    return {
+      ...defaultContent,
+      ...nicheData,
+      slug: nicheData.slug || defaultContent.slug, // Pass slug through
+      theme: {
+        global: { ...defaultContent.theme.global, ...nicheData.theme.global },
+        pages: {
+          landing: { ...defaultContent.theme.pages.landing, ...nicheData.theme.pages?.landing },
+          gatekeeper: { ...defaultContent.theme.pages.gatekeeper, ...nicheData.theme.pages?.gatekeeper },
+          player: { ...defaultContent.theme.pages.player, ...nicheData.theme.pages?.player },
+        }
+      }
+    };
+  }
+
+  // Fallback for old flat data structure
+  // 1. Determine Vibe
+  const vibe = (nicheData.vibe as ThemeVibe) || 'classic';
+  const palette = VIBE_STYLES[vibe] || VIBE_STYLES['classic'];
+
   return {
     ...defaultContent,
+    slug: nicheData.slug || defaultContent.slug, // Pass slug through
     hero: {
       ...defaultContent.hero,
-      // Map 'h1' from JSON to 'hero.title'
       title: nicheData.h1 || defaultContent.hero.title,
       names: nicheData.names || defaultContent.hero.names,
     },
-    style: {
-      ...defaultContent.style,
-      // Map 'color' from JSON to 'style.primaryColor'
-      primaryColor: nicheData.color || defaultContent.style.primaryColor,
-      // Allow overriding audio/texture if provided
-      audioTrack: nicheData.audioTrack || nicheData.audio || defaultContent.style.audioTrack,
-      recordTexture: nicheData.recordTexture || defaultContent.style.recordTexture,
-      backgroundTexture: nicheData.backgroundTexture || defaultContent.style.backgroundTexture,
+    theme: {
+      global: {
+        palette: {
+          primary: nicheData.color || palette.accent,
+          secondary: palette.envelope, // Mapping rough equivalents
+          text: "#ffffff" // Assuming dark themes mostly for now, or we could pick based on vibe
+        },
+        typography: {
+          headingFont: nicheData.googleFont || "Inter",
+          bodyFont: "Inter"
+        },
+        assets: {
+          recordTexture: nicheData.recordTexture || defaultContent.theme.global.assets.recordTexture
+        }
+      },
+      pages: {
+        landing: {
+          mode: nicheData.layoutMode === 'landing' ? 'split-screen' : 'centered', // Mapping 'landing' to 'split-screen' purely as a guess or default
+          backgroundValue: nicheData.backgroundTexture || defaultContent.theme.pages.landing.backgroundValue,
+          titleSize: "normal"
+        },
+        gatekeeper: {
+          backgroundColor: nicheData.envelopeColor || palette.envelope,
+          cardColor: palette.paper,
+          buttonStyle: "solid"
+        },
+        player: {
+          backgroundValue: nicheData.backgroundTexture || "",
+          layout: "standard"
+        }
+      }
     }
   };
 }

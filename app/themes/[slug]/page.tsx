@@ -32,7 +32,7 @@ export default async function ThemePage(props: { params: Promise<{ slug: string 
     // The 'initialData' prop here feeds into the 'mergeConfig' function we just built
     return (
         <main>
-            <ThemeComponent initialData={niche} />
+            <ThemeComponent initialData={niche} slug={params.slug} />
         </main>
     );
 }

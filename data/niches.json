@@ -1,12 +1,52 @@
 [
     {
         "slug": "rock-n-roll-wedding",
-        "title": "Rock & Roll Wedding Invitations",
-        "metaDescription": "Edgy, vinyl-inspired invites for the ultimate rock couple.",
         "archetypeId": "vintage-vinyl",
-        "h1": "For Those About to Rock",
-        "color": "#e02e2e",
-        "names": "Axel & Rose"
+        "hero": {
+            "title": "For Those About to Rock",
+            "names": "Axel & Rose",
+            "date": "OCT 31, 2026",
+            "location": "The Velvet Underground"
+        },
+        "theme": {
+            "global": {
+                "palette": {
+                    "primary": "#e02e2e",
+                    "secondary": "#000000",
+                    "text": "#ffffff"
+                },
+                "typography": {
+                    "headingFont": "Metal Mania",
+                    "bodyFont": "Roboto"
+                },
+                "assets": {
+                    "recordTexture": "/themes/vintage-vinyl/record-red.png"
+                }
+            },
+            "pages": {
+                "landing": {
+                    "mode": "split-screen",
+                    "backgroundValue": "/themes/vintage-vinyl/rock_bg.jpg",
+                    "titleSize": "huge"
+                },
+                "gatekeeper": {
+                    "backgroundTexture": "/themes/vintage-vinyl/rock_bg.jpg",
+                    "showVinylBackdrop": true,
+                    "neonColor": "#e02e2e",
+                    "cardTexture": "/themes/vintage-vinyl/leather_texture.jpg",
+                    "cardColor": "#1a1a1a",
+                    "cardShape": "square",
+                    "cornerAsset": "metal-spike",
+                    "buttonStyle": "glow",
+                    "buttonShape": "pill",
+                    "buttonColor": "#e02e2e"
+                },
+                "player": {
+                    "backgroundValue": "/themes/vintage-vinyl/concrete-dark.jpg",
+                    "layout": "standard"
+                }
+            }
+        }
     },
     {
         "slug": "jazz-lounge-wedding",
@@ -18,6 +58,22 @@
         "names": "Miles & Ella",
         "recordTexture": "/themes/vintage-vinyl/gold_label.png",
         "audioTrack": "/themes/vintage-vinyl/jazz_demo.mp3",
-        "backgroundTexture": "/themes/vintage-vinyl/jazz_bg.png"
+        "backgroundTexture": "/themes/vintage-vinyl/jazz_bg.jpg",
+        "layoutMode": "landing",
+        "googleFont": "Playfair Display",
+        "vibe": "luxury"
+    },
+    {
+        "slug": "cyberpunk-wedding",
+        "title": "Cyberpunk Wedding Invitations",
+        "metaDescription": "Neon-soaked, futuristic vinyl invites.",
+        "archetypeId": "vintage-vinyl",
+        "h1": "Neon Lights & Love",
+        "color": "#00f0ff",
+        "names": "Neo & Trinity",
+        "layoutMode": "landing",
+        "googleFont": "Orbitron",
+        "backgroundTexture": "/themes/vintage-vinyl/cyberpunk_bg.jpg",
+        "vibe": "dark"
     }
 ]

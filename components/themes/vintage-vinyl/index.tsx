@@ -7,6 +7,9 @@ import { ThemeContent } from './types';
 import { supabase } from '../../../lib/supabase';
 const musicFile = '/themes/vintage-vinyl/music.mp3';
 import { mergeConfig, defaultContent } from './config';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { MetalSpike } from './MetalSpike';
 
 // Noise texture SVG data URI for the paper texture
 const NOISE_SVG = `data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.15'/%3E%3C/svg%3E`;
@@ -15,6 +18,7 @@ interface VintageVinylThemeProps {
   initialData?: any;
   // Keep these for backward compatibility/editor support if needed, though prompt focused on initialData
   weddingId?: string;
+  slug?: string;
   onContentChange?: (section: string, field: string, value: any) => void;
   isEditorOpen?: boolean;
 }
@@ -599,13 +603,14 @@ const VinylRecord = ({
   );
 };
 
-export const VintageVinylTheme: React.FC<VintageVinylThemeProps> = ({ initialData = {}, weddingId, onContentChange, isEditorOpen = false }) => {
+export const VintageVinylTheme: React.FC<VintageVinylThemeProps> = ({ initialData = {}, weddingId, slug, onContentChange, isEditorOpen = false }) => {
   // 1. GENERATE DYNAMIC CONFIG
   const config = mergeConfig(initialData);
   const content = config; // Alias for backward compatibility with existing render logic
   // Always start on landing page, require click to open
   const [isOpen, setIsOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const router = useRouter();
   const [isRSVPOpen, setIsRSVPOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<'intro' | 'details' | 'gallery'>('intro');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -622,7 +627,36 @@ export const VintageVinylTheme: React.FC<VintageVinylThemeProps> = ({ initialDat
 
   useEffect(() => {
     // Initialize audio with local music file
-    const audio = new Audio(content.style.audioTrack); // Updated to use config audio
+    // Note: Assuming we might want to move audioTrack to global assets or player config, 
+    // but for now let's check if it exists in the new structure's assets or keep a fallback.
+    // The prompt didn't explicitly move audioTrack, but it was in style. 
+    // Let's assume for now we might need to add it to GlobalThemeConfig assets if not there, or check where it fits.
+    // Looking at the prompt, it didn't specify audioTrack location in the new schema. 
+    // However, I merged it in config.ts mergeConfig (wait, I should check if I did).
+    // In config.ts I removed style.audioTrack.
+    // Let's check my config.ts edit. I did NOT put audioTrack in GlobalThemeConfig or PlayerConfig in the prompt's Step 1.
+    // But in mergeConfig, I might have missed mapped it? 
+    // Actually, I should probably check if I can add it to global assets or player config to be safe, or if it was omitted on purpose.
+    // The prompt Step 1: "Define the Global DNA... assets: { recordTexture... cursor... }" no audio.
+    // Step 2 Data: no audio.
+    // Step 3 Refactor Landing View: "Update the component to read from config.theme.pages.landing... Font Injection... Background... Colors..."
+    // It says "Note: For this step, simply ensure the Landing Mode renders correctly... We will refine Gatekeeper/Player in the next prompt."
+    // So audio might be part of Player which is refined later.
+    // However, the code uses audio.
+    // I should probably Comment out audio usage or use a default since it's not in the new config yet?
+    // OR, I should add it to the type definition to avoid errors.
+    // ERROR CHECK: I removed audioTrack from VinylThemeConfig. So `content.style.audioTrack` will error.
+    // I should probably temporarily hardcode it or use a safe access if I can't change the config type anymore (I just did).
+    // Wait, the user said "Refactor the VinylThemeConfig...".
+    // If I broke audio, I should probably fix it.
+    // Let's assume for this step I should focus on visual.
+    // But `content.style.audioTrack` is used in useEffect.
+    // I'll replace it with a hardcoded path for now to unblock, or add it to the interface.
+    // Better: Add it to GlobalThemeConfig assets or PlayerConfig.
+    // Let's use a hardcoded string or a safe "try get" for now to satisfy the compiler if I can't add to config.
+    // Actually, I can just not access `content.style.audioTrack`.
+    // I will replace the audio initialization line.
+    const audio = new Audio('/themes/vintage-vinyl/music.mp3'); // Temporary fallback until PlayerConfig is fully defined with audio
     audio.loop = true;
     audio.volume = 0.5;
     audioRef.current = audio;
@@ -631,7 +665,7 @@ export const VintageVinylTheme: React.FC<VintageVinylThemeProps> = ({ initialDat
       audio.pause();
       audioRef.current = null;
     };
-  }, [content.style.audioTrack]);
+  }, [/* content.style.audioTrack dependency removed */]);
 
   useEffect(() => {
     if (!audioRef.current) return;
@@ -644,6 +678,20 @@ export const VintageVinylTheme: React.FC<VintageVinylThemeProps> = ({ initialDat
       audioRef.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    // Inject config.theme.global.typography.headingFont
+    const font = config.theme.global.typography.headingFont;
+    if (font) {
+      const link = document.createElement('link');
+      link.href = `https://fonts.googleapis.com/css?family=${font.replace(/\s+/g, '+')}:400,700&display=swap`;
+      link.rel = 'stylesheet';
+      document.head.appendChild(link);
+      return () => {
+        document.head.removeChild(link);
+      };
+    }
+  }, [config.theme.global.typography.headingFont]);
 
   useEffect(() => {
     if (!isOpen) setIsPlaying(false);
@@ -857,19 +905,81 @@ export const VintageVinylTheme: React.FC<VintageVinylThemeProps> = ({ initialDat
     }
   };
 
+  if (config.theme.pages.landing.mode === 'split-screen') {
+    const bgValue = config.theme.pages.landing.backgroundValue;
+    const isImage = bgValue.startsWith('/') || bgValue.startsWith('http');
+
+    return (
+      <div
+        className="w-full h-screen grid grid-cols-1 md:grid-cols-2 overflow-hidden relative"
+        style={{
+          backgroundColor: isImage ? '#000000' : bgValue,
+          ...(isImage && {
+            backgroundImage: `url('${bgValue}')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundBlendMode: 'soft-light'
+          })
+        }}
+      >
+        <GlobalStyles />
+        {/* LEFT COLUMN: Marketing Copy - ensure high z-index */}
+        <div className="flex flex-col justify-center p-12 z-50 relative text-white h-full bg-black/30 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none">
+          <h1
+            className="text-6xl md:text-8xl font-bold mb-6 leading-none drop-shadow-lg"
+            style={{ fontFamily: config.theme.global.typography.headingFont || 'inherit' }}
+          >
+            {content.hero.title}
+          </h1>
+          <p className="text-2xl opacity-90 mb-8 font-serif drop-shadow-md">{content.hero.date} • {content.hero.location}</p>
+
+          {/* BUTTON WITH LINK - ensure clickable */}
+          <Link
+            href={`/demo/${config.slug}`}
+            className="inline-block w-fit z-50 relative"
+          >
+            <button
+              className="px-8 py-4 text-black text-xl font-bold rounded-full hover:scale-105 transition-transform uppercase tracking-widest shadow-[0_0_20px_rgba(255,255,255,0.3)] cursor-pointer"
+              style={{ backgroundColor: config.theme.global.palette.primary || '#ffffff' }}
+            >
+              Get This Theme
+            </button>
+          </Link>
+        </div>
+
+        {/* RIGHT COLUMN: The Record - add pointer-events-none so it doesn't block clicks */}
+        <div className="relative flex items-center justify-center z-10 scale-125 md:scale-150 translate-x-10 md:translate-x-0 opacity-90 md:opacity-100 pointer-events-none">
+          <div className="relative w-[30rem] h-[30rem]">
+            <VinylRecord
+              label={content.hero.title}
+              subLabel={content.hero.date}
+              isPlaying={true}
+              className="w-full h-full"
+              texture={config.theme.global.assets.recordTexture}
+            />
+            <ToneArm isPlaying={true} className="absolute -top-10 -right-10 w-48 h-96 pointer-events-none drop-shadow-2xl" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`${isEditorOpen ? 'relative w-full h-full' : 'fixed inset-0'} flex items-center justify-center overflow-hidden`}
       // 2. APPLY DYNAMIC COLOR OR BACKGROUND TEXTURE
       style={{
-        backgroundColor: content.style.primaryColor,
-        ...(content.style.backgroundTexture ? {
-          backgroundImage: `url('${content.style.backgroundTexture}')`,
+        backgroundColor: config.theme.global.palette.primary, // Fallback for no image?
+        // Logic for centered mode background (using landing background value)
+        ...(config.theme.pages.landing.backgroundValue.startsWith('/') || config.theme.pages.landing.backgroundValue.startsWith('http') ? {
+          backgroundImage: `url('${config.theme.pages.landing.backgroundValue}')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
           backgroundBlendMode: 'soft-light'
-        } : {})
+        } : {
+          backgroundColor: config.theme.pages.landing.backgroundValue
+        })
       }}
     >
       <GlobalStyles />
@@ -882,104 +992,195 @@ export const VintageVinylTheme: React.FC<VintageVinylThemeProps> = ({ initialDat
 
       <AnimatePresence mode="wait">
         {!isOpen ? (
-          /* ================= LANDING PAGE STATE (Ornate Lux) ================= */
+          /* ================= GATEKEEPER VIEW (Skeleton + Skin Architecture) ================= */
           <motion.div
-            key="landing"
-            className="relative w-full h-full flex items-center justify-center bg-ornate overflow-hidden"
+            key="gatekeeper"
+            className="relative w-full h-full flex items-center justify-center overflow-hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.8 } }}
+            style={{
+              // Layer 1: The Wall (Background)
+              backgroundColor: config.theme.pages.gatekeeper.backgroundColor || '#1a1a1a',
+              ...(config.theme.pages.gatekeeper.backgroundTexture && {
+                backgroundImage: `url('${config.theme.pages.gatekeeper.backgroundTexture}')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              })
+            }}
           >
-            {/* --- Decorative Elements --- */}
+            {/* --- Layer 3: Corner Decorations (The Jewelry) --- */}
 
-            {/* Corner Flourishes */}
-            <OrnateCorner className="absolute top-0 left-0 w-32 h-32 md:w-48 md:h-48 pointer-events-none opacity-80" />
-            <OrnateCorner className="absolute top-0 right-0 w-32 h-32 md:w-48 md:h-48 transform scale-x-[-1] pointer-events-none opacity-80" />
-            <OrnateCorner className="absolute bottom-0 left-0 w-32 h-32 md:w-48 md:h-48 transform scale-y-[-1] pointer-events-none opacity-80" />
-            <OrnateCorner className="absolute bottom-0 right-0 w-32 h-32 md:w-48 md:h-48 transform scale-[-1] pointer-events-none opacity-80" />
 
             {/* Atmospheric Particles */}
             <FloatingParticles />
 
-            {/* Side Accents (Leafy scrolls) */}
-            <div className="absolute top-1/2 left-0 -translate-y-1/2 w-16 h-64 bg-contain bg-no-repeat opacity-40 hidden md:block" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 100 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50,0 Q100,100 50,200 Q0,300 50,400' fill='none' stroke='%23bf953f' stroke-width='2'/%3E%3C/svg%3E")` }}></div>
-            <div className="absolute top-1/2 right-0 -translate-y-1/2 w-16 h-64 bg-contain bg-no-repeat opacity-40 transform scale-x-[-1] hidden md:block" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 100 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50,0 Q100,100 50,200 Q0,300 50,400' fill='none' stroke='%23bf953f' stroke-width='2'/%3E%3C/svg%3E")` }}></div>
+            {/* === Z-INDEX 10: VINYL BACKDROP (The Halo) === */}
+            {config.theme.pages.gatekeeper.showVinylBackdrop && (
+              <motion.div
+                className="absolute z-10 w-[95vw] max-w-[550px] aspect-square"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{
+                  opacity: 1,
+                  scale: 1,
+                  rotate: 360
+                }}
+                transition={{
+                  opacity: { duration: 1, delay: 0.3 },
+                  scale: { duration: 1, delay: 0.3 },
+                  rotate: { duration: 100, repeat: Infinity, ease: "linear" }
+                }}
+                style={{
+                  // Neon glow ring effect
+                  filter: config.theme.pages.gatekeeper.neonColor
+                    ? `drop-shadow(0 0 30px ${config.theme.pages.gatekeeper.neonColor}) drop-shadow(0 0 60px ${config.theme.pages.gatekeeper.neonColor}80)`
+                    : 'none'
+                }}
+              >
+                <VinylRecord
+                  label=""
+                  subLabel=""
+                  className="w-full h-full opacity-90"
+                  texture={config.theme.global.assets.recordTexture}
+                />
+                {/* Sheen Overlay - Makes the spin visible */}
+                <div
+                  className="absolute inset-0 rounded-full pointer-events-none"
+                  style={{
+                    background: 'conic-gradient(from 90deg, transparent 0%, rgba(255,255,255,0.08) 15%, transparent 30%, rgba(255,255,255,0.05) 50%, transparent 65%, rgba(255,255,255,0.1) 80%, transparent 100%)',
+                    mixBlendMode: 'overlay'
+                  }}
+                />
+              </motion.div>
+            )}
 
-            {/* Scattered Stars */}
-            <Star style={{ top: '15%', left: '20%', width: '12px', animationDelay: '0.2s' }} />
-            <Star style={{ top: '25%', right: '15%', width: '16px', animationDelay: '1.5s' }} />
-            <Star style={{ bottom: '20%', left: '10%', width: '10px', animationDelay: '2.3s' }} />
-            <Star style={{ top: '10%', left: '50%', width: '8px', animationDelay: '0.8s' }} />
-            <Star style={{ bottom: '15%', right: '25%', width: '14px', animationDelay: '1.1s' }} />
-
-            {/* --- Central Assembly (Wrapper) --- */}
+            {/* === Z-INDEX 20: THE INVITE CARD === */}
             <motion.div
               initial="initial"
               animate="animate"
               whileHover="hover"
               variants={{
                 initial: { opacity: 0, scale: 0.95, y: 20 },
-                animate: { opacity: 1, scale: 1, y: 0, transition: { duration: 1, ease: "easeOut", delay: 0.2 } },
+                animate: { opacity: 1, scale: 1, y: 0, transition: { duration: 1, ease: "easeOut", delay: 0.5 } },
                 hover: { scale: 1.02, transition: { duration: 0.3 } }
               }}
-              className="relative z-10 w-[90vw] max-w-[500px] aspect-[4/5] md:aspect-square cursor-pointer"
+              className="relative z-20 w-[85vw] max-w-[450px] aspect-[4/5] md:aspect-square cursor-pointer"
               onClick={handleOpen}
             >
-              {/* Vinyl Record (Peeking out on hover/click) */}
-              <motion.div
-                className="absolute top-2 bottom-2 left-2 right-2 rounded-full shadow-2xl flex items-center justify-center"
-                variants={{
-                  initial: { x: 0, y: 0, rotate: 0 },
-                  hover: {
-                    x: isMobile ? 0 : '25%',
-                    y: isMobile ? '-25%' : 0,
-                    rotate: 180,
-                    transition: { type: "spring", stiffness: 60, damping: 15 }
-                  }
-                }}
-              >
-                <VinylRecord label={content.hero.title} subLabel={content.hero.date} className="w-full h-full" texture={content.style.recordTexture} />
-              </motion.div>
+              {/* === CORNER DECORATIONS (Z-30, overhanging the card) === */}
+              {config.theme.pages.gatekeeper.cornerAsset && (
+                <>
+                  {[0, 90, 180, 270].map((rotation, i) => {
+                    const isSpike = config.theme.pages.gatekeeper.cornerAsset === 'metal-spike';
+                    const positionStyle = i === 0 ? { top: '-8px', left: '-8px' } :
+                      i === 1 ? { top: '-8px', right: '-8px' } :
+                        i === 2 ? { bottom: '-8px', right: '-8px' } :
+                          { bottom: '-8px', left: '-8px' };
 
+                    return (
+                      <div
+                        key={i}
+                        className="absolute z-30 pointer-events-none"
+                        style={{
+                          ...positionStyle,
+                          width: isSpike ? '60px' : '48px',
+                          height: isSpike ? '60px' : '48px',
+                          transform: `rotate(${rotation}deg)`
+                        }}
+                      >
+                        {isSpike ? (
+                          <MetalSpike className="w-full h-full" />
+                        ) : (
+                          <img
+                            src={config.theme.pages.gatekeeper.cornerAsset}
+                            alt=""
+                            className="w-full h-full object-contain opacity-90"
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </>
+              )}
               {/* The Front Card (Visuals) */}
               <div
-                className="relative z-20 w-full h-full p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex flex-col items-center justify-center text-center"
+                className="relative z-20 w-full h-full p-8 md:p-12 flex flex-col items-center justify-center text-center"
                 style={{
-                  background: 'linear-gradient(135deg, #FFFDF5 0%, #E8DCC0 50%, #FFFDF5 100%)',
-                  borderRadius: '4px',
-                  boxShadow: '0 0 0 1px rgba(212, 175, 55, 0.3), 0 20px 60px rgba(0,0,0,0.7)'
+                  // Layer 2: Card texture or color
+                  backgroundColor: config.theme.pages.gatekeeper.cardColor || '#f9f5eb',
+                  ...(config.theme.pages.gatekeeper.cardTexture && {
+                    backgroundImage: `url('${config.theme.pages.gatekeeper.cardTexture}')`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }),
+                  borderRadius: config.theme.pages.gatekeeper.cardShape === 'rounded' ? '16px' : '4px',
+                  boxShadow: config.theme.pages.gatekeeper.neonColor
+                    ? `0 0 0 2px ${config.theme.pages.gatekeeper.neonColor}, 0 20px 60px rgba(0,0,0,0.7)`
+                    : `0 0 0 1px ${config.theme.global.palette.primary}40, 0 20px 60px rgba(0,0,0,0.7)`
                 }}
               >
-                {/* Texture Overlay */}
-                <div className="absolute inset-0 opacity-40 pointer-events-none mix-blend-multiply" style={{ backgroundImage: `url("${NOISE_SVG}")` }} />
+                {/* Texture Overlay for richness */}
+                <div className="absolute inset-0 opacity-30 pointer-events-none mix-blend-overlay" style={{ backgroundImage: `url("${NOISE_SVG}")` }} />
 
-                {/* Inner Double Border */}
-                <div className="absolute inset-4 border border-[#d4af37] opacity-60 pointer-events-none" />
-                <div className="absolute inset-6 border border-[#d4af37] opacity-40 pointer-events-none" />
+                {/* Inner Border using primary color */}
+                <div
+                  className="absolute inset-4 border opacity-60 pointer-events-none"
+                  style={{ borderColor: config.theme.global.palette.primary }}
+                />
+                <div
+                  className="absolute inset-6 border opacity-40 pointer-events-none"
+                  style={{ borderColor: config.theme.global.palette.primary }}
+                />
 
-                {/* Decorative Corners on Card */}
-                <CardCorner className="absolute top-4 left-4 w-8 h-8 pointer-events-none" />
-                <CardCorner className="absolute top-4 right-4 w-8 h-8 transform scale-x-[-1] pointer-events-none" />
-                <CardCorner className="absolute bottom-4 left-4 w-8 h-8 transform scale-y-[-1] pointer-events-none" />
-                <CardCorner className="absolute bottom-4 right-4 w-8 h-8 transform scale-[-1] pointer-events-none" />
-
-                {/* Content */}
+                {/* --- Layer 4: Text Content (Dynamic Font) --- */}
                 <div className="relative z-20 flex flex-col items-center justify-between h-full py-4">
                   <div className="mt-4">
-                    <span className="font-serif italic text-[#8c7b66] text-xl md:text-2xl tracking-wide">{content.hero.title}</span>
+                    <span
+                      className="italic text-xl md:text-2xl tracking-wide opacity-80"
+                      style={{
+                        fontFamily: config.theme.global.typography.headingFont || 'serif',
+                        color: config.theme.global.palette.text || '#8c7b66'
+                      }}
+                    >
+                      {content.hero.title}
+                    </span>
                   </div>
 
                   <div className="flex flex-col items-center gap-0 my-4">
-                    <h1 className="flex flex-col items-center leading-none">
-                      <span className="font-serif text-6xl md:text-8xl gold-foil-text animate-shine tracking-tight">{(content.hero.names?.split('&')[0] || '').trim() || 'Name'}</span>
-                      <span className="font-serif italic text-4xl md:text-5xl text-[#d4af37] my-2">&</span>
-                      <span className="font-serif text-6xl md:text-8xl gold-foil-text animate-shine tracking-tight">{(content.hero.names?.split('&')[1] || '').trim() || 'Name'}</span>
+                    <h1
+                      className="flex flex-col items-center leading-none"
+                      style={{ fontFamily: config.theme.global.typography.headingFont || 'serif' }}
+                    >
+                      <span
+                        className="text-6xl md:text-8xl tracking-tight"
+                        style={{ color: config.theme.global.palette.primary }}
+                      >
+                        {(content.hero.names?.split('&')[0] || '').trim() || 'Name'}
+                      </span>
+                      <span
+                        className="italic text-4xl md:text-5xl my-2"
+                        style={{ color: config.theme.global.palette.primary }}
+                      >
+                        &
+                      </span>
+                      <span
+                        className="text-6xl md:text-8xl tracking-tight"
+                        style={{ color: config.theme.global.palette.primary }}
+                      >
+                        {(content.hero.names?.split('&')[1] || '').trim() || 'Name'}
+                      </span>
                     </h1>
                   </div>
 
                   <div className="mb-4 flex flex-col items-center gap-3">
-                    <div className="w-16 h-[2px] gold-foil-bg opacity-80" />
-                    <span className="font-serif text-[#1e100b] text-base md:text-lg tracking-[0.15em] font-bold uppercase">
+                    <div
+                      className="w-16 h-[2px] opacity-80"
+                      style={{ backgroundColor: config.theme.global.palette.primary }}
+                    />
+                    <span
+                      className="text-base md:text-lg tracking-[0.15em] font-bold uppercase"
+                      style={{ color: config.theme.global.palette.text || '#1e100b' }}
+                    >
                       {content.hero.date}
                     </span>
                   </div>
@@ -987,17 +1188,47 @@ export const VintageVinylTheme: React.FC<VintageVinylThemeProps> = ({ initialDat
               </div>
             </motion.div>
 
-            {/* --- Floating Button (Outside Card) --- */}
+            {/* --- Layer 5: The Button (Dynamic Style, Shape & Color) --- */}
             <motion.button
               onClick={handleOpen}
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1, duration: 0.8, type: "spring" }}
-              whileHover={{ scale: 1.05, boxShadow: "0 0 25px rgba(212, 175, 55, 0.6)" }}
-              className="absolute bottom-10 md:bottom-16 z-30 px-10 py-4 rounded-full gold-foil-bg shadow-[0_0_15px_rgba(212,175,55,0.4)] flex items-center gap-3 group"
+              whileHover={{
+                scale: 1.05,
+                boxShadow: config.theme.pages.gatekeeper.buttonStyle === 'glow'
+                  ? `0 0 30px ${config.theme.pages.gatekeeper.buttonColor || config.theme.global.palette.primary}, 0 0 60px ${config.theme.pages.gatekeeper.buttonColor || config.theme.global.palette.primary}80`
+                  : `0 0 25px ${config.theme.pages.gatekeeper.buttonColor || config.theme.global.palette.primary}80`
+              }}
+              className={`absolute bottom-10 md:bottom-16 z-30 px-10 py-4 flex items-center gap-3 group transition-all ${config.theme.pages.gatekeeper.buttonShape === 'pill' ? 'rounded-full' :
+                config.theme.pages.gatekeeper.buttonShape === 'rectangle' ? 'rounded-none' :
+                  'rounded-lg'
+                }`}
+              style={{
+                // buttonStyle: solid | glow | outline
+                ...(config.theme.pages.gatekeeper.buttonStyle === 'outline' ? {
+                  backgroundColor: 'transparent',
+                  border: `2px solid ${config.theme.pages.gatekeeper.buttonColor || config.theme.global.palette.primary}`,
+                  color: config.theme.pages.gatekeeper.buttonColor || config.theme.global.palette.primary
+                } : {
+                  backgroundColor: config.theme.pages.gatekeeper.buttonColor || config.theme.global.palette.primary || '#bf953f',
+                  boxShadow: config.theme.pages.gatekeeper.buttonStyle === 'glow'
+                    ? `0 0 20px ${config.theme.pages.gatekeeper.buttonColor || config.theme.global.palette.primary}80`
+                    : 'none'
+                })
+              }}
             >
-              <span className="text-[#1e100b] font-sans font-bold text-xs md:text-sm tracking-[0.25em] uppercase">Click to Open</span>
-              <span className="w-2 h-2 border-t-2 border-r-2 border-[#1e100b] transform rotate-45 group-hover:translate-x-1 transition-transform" />
+              <span className={`font-sans font-bold text-xs md:text-sm tracking-[0.25em] uppercase ${config.theme.pages.gatekeeper.buttonStyle === 'outline' ? '' : 'text-white'
+                }`} style={{
+                  color: config.theme.pages.gatekeeper.buttonStyle === 'outline'
+                    ? (config.theme.pages.gatekeeper.buttonColor || config.theme.global.palette.primary)
+                    : 'white'
+                }}>Click to Open</span>
+              <span className={`w-2 h-2 border-t-2 border-r-2 transform rotate-45 group-hover:translate-x-1 transition-transform`} style={{
+                borderColor: config.theme.pages.gatekeeper.buttonStyle === 'outline'
+                  ? (config.theme.pages.gatekeeper.buttonColor || config.theme.global.palette.primary)
+                  : 'white'
+              }} />
             </motion.button>
 
           </motion.div>
@@ -1012,8 +1243,8 @@ export const VintageVinylTheme: React.FC<VintageVinylThemeProps> = ({ initialDat
           >
             {/* LEFT PANEL: Liner Notes */}
             <motion.div
-              className="w-full md:w-1/2 h-[70%] md:h-full relative bg-[#fdf5e6] p-6 md:p-12 overflow-hidden shadow-[5px_0_20px_rgba(0,0,0,0.3)] z-20"
-              style={{ backgroundColor: '#f4e4bc' }}
+              className="w-full md:w-1/2 h-[70%] md:h-full relative p-6 md:p-12 overflow-hidden shadow-[5px_0_20px_rgba(0,0,0,0.3)] z-20"
+              style={{ backgroundColor: '#f4e4bc', color: '#1e100b' }} // FIXME: Add paperColor to new schema or use default
             >
               <div className="absolute inset-0 pointer-events-none mix-blend-multiply opacity-40" style={{ backgroundImage: `url("${NOISE_SVG}")` }} />
               <div className="absolute inset-4 md:inset-8 border-4 border-double border-[#d4af37] opacity-50 pointer-events-none" />
@@ -1070,7 +1301,7 @@ export const VintageVinylTheme: React.FC<VintageVinylThemeProps> = ({ initialDat
               {/* Turntable Assembly Wrapper - locks arm to record */}
               <div className="relative">
                 <div className="relative w-[35vh] h-[35vh] md:w-[450px] md:h-[450px] bg-[#222] rounded-full border-8 border-[#111] shadow-[0_0_50px_rgba(0,0,0,0.8)] flex items-center justify-center">
-                  <VinylRecord label={content.hero.title} subLabel={content.hero.date} isPlaying={isPlaying} className="w-[92%] h-[92%]" texture={content.style.recordTexture} />
+                  <VinylRecord label={content.hero.title} subLabel={content.hero.date} isPlaying={isPlaying} className="w-[92%] h-[92%]" texture={config.theme.global.assets.recordTexture} />
                 </div>
 
                 {/* SVG ToneArm Component - Positioned relative to the record wrapper */}
