@@ -9,7 +9,6 @@ const musicFile = '/themes/vintage-vinyl/music.mp3';
 import { mergeConfig, defaultContent } from './config';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { MetalSpike } from './MetalSpike';
 
 // Noise texture SVG data URI for the paper texture
 const NOISE_SVG = `data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.15'/%3E%3C/svg%3E`;
@@ -288,7 +287,7 @@ const ToneArm = ({ isPlaying, className }: { isPlaying: boolean; className?: str
 
 // --- Main Components ---
 
-const RSVPTicket = ({ onClick, label }: { onClick: () => void, label: string }) => (
+const RSVPTicket = ({ onClick, label, imageSrc }: { onClick: () => void, label: string, imageSrc?: string }) => (
   <motion.div
     onClick={onClick}
     whileHover={{ scale: 1.05, rotate: -5, y: -2 }}
@@ -296,28 +295,38 @@ const RSVPTicket = ({ onClick, label }: { onClick: () => void, label: string }) 
     className="relative cursor-pointer group"
     style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}
   >
-    <div className="relative w-36 h-16 bg-[#e6d2b5] flex flex-col items-center justify-center overflow-hidden rounded-sm">
-      {/* Texture */}
-      <div className="absolute inset-0 opacity-40 mix-blend-multiply" style={{ backgroundImage: `url("${NOISE_SVG}")` }} />
-
-      {/* Perforation Left */}
-      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#151515] rounded-full -translate-x-2 shadow-inner" />
-      {/* Perforation Right */}
-      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#151515] rounded-full translate-x-2 shadow-inner" />
-
-      {/* Inner Border */}
-      <div className="absolute inset-1.5 border-2 border-dashed border-[#8c7b66]/60 rounded-sm" />
-
-      {/* Text */}
-      <div className="relative z-10 flex flex-col items-center">
-        <div className="flex items-center gap-2 mb-0.5 opacity-70">
-          <span className="w-2 h-2 rounded-full border border-[#5c4033]"></span>
-          <span className="font-sans text-[0.5rem] tracking-[0.2em] text-[#5c4033] uppercase">{label}</span>
-          <span className="w-2 h-2 rounded-full border border-[#5c4033]"></span>
-        </div>
-        <span className="font-serif text-2xl font-black text-[#2d1b0e] tracking-widest leading-none group-hover:text-[#b08d55] transition-colors">RSVP</span>
+    {imageSrc ? (
+      <div className="relative w-36 h-auto flex items-center justify-center">
+        <img
+          src={imageSrc}
+          alt={label}
+          className="w-full h-full object-contain drop-shadow-md"
+        />
       </div>
-    </div>
+    ) : (
+      <div className="relative w-36 h-16 bg-[#e6d2b5] flex flex-col items-center justify-center overflow-hidden rounded-sm">
+        {/* Texture */}
+        <div className="absolute inset-0 opacity-40 mix-blend-multiply" style={{ backgroundImage: `url("${NOISE_SVG}")` }} />
+
+        {/* Perforation Left */}
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#151515] rounded-full -translate-x-2 shadow-inner" />
+        {/* Perforation Right */}
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#151515] rounded-full translate-x-2 shadow-inner" />
+
+        {/* Inner Border */}
+        <div className="absolute inset-1.5 border-2 border-dashed border-[#8c7b66]/60 rounded-sm" />
+
+        {/* Text */}
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="flex items-center gap-2 mb-0.5 opacity-70">
+            <span className="w-2 h-2 rounded-full border border-[#5c4033]"></span>
+            <span className="font-sans text-[0.5rem] tracking-[0.2em] text-[#5c4033] uppercase">{label}</span>
+            <span className="w-2 h-2 rounded-full border border-[#5c4033]"></span>
+          </div>
+          <span className="font-serif text-2xl font-black text-[#2d1b0e] tracking-widest leading-none group-hover:text-[#b08d55] transition-colors">RSVP</span>
+        </div>
+      </div>
+    )}
   </motion.div>
 );
 
@@ -456,12 +465,12 @@ const RSVPModal: React.FC<{ onClose: () => void, confirmationMessage: string, de
   );
 };
 
-const Signature = () => (
+const Signature = ({ color = '#2d1b0e' }: { color?: string }) => (
   <svg width="200" height="60" viewBox="0 0 200 60" className="opacity-80 transform -rotate-2">
     <motion.path
       d="M10,40 Q30,20 50,40 T90,30 T130,40"
       fill="none"
-      stroke="#2d1b0e"
+      stroke={color}
       strokeWidth="2"
       initial={{ pathLength: 0 }}
       animate={{ pathLength: 1 }}
@@ -472,7 +481,7 @@ const Signature = () => (
       y="45"
       fontFamily="cursive"
       fontSize="24"
-      fill="#2d1b0e"
+      fill={color}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 1, delay: 2 }}
@@ -483,7 +492,7 @@ const Signature = () => (
     <motion.path
       d="M60,40 C70,30 80,50 90,35 S110,45 120,30 S140,50 160,35"
       fill="none"
-      stroke="#2d1b0e"
+      stroke={color}
       strokeWidth="2"
       initial={{ pathLength: 0 }}
       animate={{ pathLength: 1 }}
@@ -492,19 +501,20 @@ const Signature = () => (
   </svg>
 );
 
-const NeonVisualizer = ({ isPlaying }: { isPlaying: boolean }) => {
+const NeonVisualizer = ({ isPlaying, color = '#9333ea' }: { isPlaying: boolean; color?: string }) => {
   return (
     <div className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center">
       <AnimatePresence>
         {isPlaying && (
           <>
-            {/* Main Purple Glow Pulse */}
+            {/* Main Glow Pulse */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: [0.15, 0.3, 0.15], scale: [1, 1.05, 1] }}
               exit={{ opacity: 0, scale: 0.8 }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute w-[180%] h-[180%] rounded-full bg-purple-600 blur-3xl opacity-30 mix-blend-screen"
+              className="absolute w-[180%] h-[180%] rounded-full blur-3xl opacity-30 mix-blend-screen"
+              style={{ backgroundColor: color }}
             />
 
             {/* Animated Equalizer Bars - Radial */}
@@ -531,7 +541,8 @@ const NeonVisualizer = ({ isPlaying }: { isPlaying: boolean }) => {
                   transformOrigin: 'bottom center',
                   transform: `rotate(${i * 30}deg) translateY(-60px)`, // Push out from center (reduced distance)
                   borderRadius: '2px',
-                  boxShadow: '0 0 5px #a855f7'
+                  backgroundColor: color,
+                  boxShadow: `0 0 5px ${color}`
                 }}
               />
             ))}
@@ -547,13 +558,15 @@ const VinylRecord = ({
   subLabel,
   isPlaying = false,
   className = "",
-  texture
+  texture,
+  glowColor = "#a855f7"
 }: {
   label: string;
   subLabel: string;
   isPlaying?: boolean;
   className?: string;
   texture?: string;
+  glowColor?: string;
 }) => {
   return (
     <motion.div
@@ -561,19 +574,19 @@ const VinylRecord = ({
       style={{
         background: `conic-gradient(from 45deg, #1a1a1a 0%, #333 10%, #1a1a1a 20%, #000 30%, #222 50%, #000 70%, #1a1a1a 80%, #333 90%, #1a1a1a 100%)`,
         boxShadow: isPlaying
-          ? '0 0 40px rgba(168, 85, 247, 0.4), inset 0 0 60px rgba(168, 85, 247, 0.3)'
+          ? `0 0 40px ${glowColor}66, inset 0 0 60px ${glowColor}4d`
           : '0 20px 50px rgba(0,0,0,0.5)',
       }}
       animate={isPlaying ? { rotate: 360 } : { rotate: 0 }}
       transition={isPlaying ? { repeat: Infinity, ease: "linear", duration: 4 } : { duration: 0.5 }}
     >
-      <NeonVisualizer isPlaying={isPlaying || false} />
+      <NeonVisualizer isPlaying={isPlaying || false} color={glowColor} />
       <div className="absolute inset-0 rounded-full opacity-50" style={{ background: `repeating-radial-gradient(#000 0, #000 2px, transparent 3px, transparent 4px)` }} />
       <div className="absolute inset-0 rounded-full opacity-30" style={{ background: `linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%)` }} />
       <div className="absolute inset-0 flex items-center justify-center">
         {/* Neon glow ring from inside */}
         {isPlaying && (
-          <div className="absolute inset-[30%] rounded-full shadow-[0_0_20px_5px_rgba(168,85,247,0.6)] animate-pulse z-0" />
+          <div className="absolute inset-[30%] rounded-full animate-pulse z-0" style={{ boxShadow: `0 0 20px 5px ${glowColor}99` }} />
         )}
 
         <div
@@ -720,8 +733,8 @@ export const VintageVinylTheme: React.FC<VintageVinylThemeProps> = ({ initialDat
     </svg>
   );
 
-  const TrackNumber = ({ num }: { num: string }) => (
-    <div className="absolute -left-12 top-0 font-sans font-black text-5xl text-[#d4af37]/20 select-none">
+  const TrackNumber = ({ num, color = '#2d1b0e' }: { num: string; color?: string }) => (
+    <div className="absolute -left-12 top-1 w-8 h-8 rounded-full border border-current flex items-center justify-center font-sans font-bold text-xs opacity-50" style={{ color: color, borderColor: color }}>
       {num}
     </div>
   );
@@ -745,9 +758,9 @@ export const VintageVinylTheme: React.FC<VintageVinylThemeProps> = ({ initialDat
                 {content.hero.location}
               </div>
             </div>
-            <h2 className="font-serif text-3xl text-[#2d1b0e] mb-4">{content.story.title}</h2>
+            <h2 className="font-serif text-3xl mb-4" style={{ color: config.theme.pages.player.leftPanelColor || '#2d1b0e' }}>{content.story.title}</h2>
             <div className="max-w-md px-4 text-left">
-              <p className="font-serif text-[#5c4033] leading-relaxed">
+              <p className="font-serif leading-relaxed" style={{ color: config.theme.pages.player.leftPanelColor || '#5c4033' }}>
                 <span className="drop-cap">{content.story.description.charAt(0)}</span>
                 {content.story.description.slice(1)}
               </p>
@@ -755,38 +768,39 @@ export const VintageVinylTheme: React.FC<VintageVinylThemeProps> = ({ initialDat
 
             {/* Signature Area */}
             <div className="mt-8 mb-4">
-              <Signature />
+              <Signature color={config.theme.pages.player.leftPanelColor} />
             </div>
           </motion.div>
         );
       case 'details':
         return (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="h-full flex flex-col p-2 relative">
-            <div className="flex-1 border-[6px] border-double border-[#2d1b0e] p-6 md:p-8 flex flex-col items-center text-center relative bg-[#fdfbf7] shadow-sm overflow-y-auto custom-scrollbar">
+            <div className={`flex-1 p-6 md:p-8 flex flex-col items-center text-center relative shadow-none overflow-y-auto custom-scrollbar ${config.theme.pages.player.leftPanelTexture ? 'border-none' : 'border-[6px] border-double border-[#2d1b0e] bg-[#fdfbf7] shadow-sm'}`}>
               <div className="mt-2 mb-6 w-full shrink-0">
-                <h2 className="font-sans font-black text-3xl md:text-5xl uppercase tracking-tighter text-[#2d1b0e] leading-[0.9] transform scale-y-110">{content.logistics.title}</h2>
-                <div className="mt-4 border-b-2 border-dashed border-[#2d1b0e] w-1/2 mx-auto" />
+                <h2 className="font-sans font-black text-3xl md:text-5xl uppercase tracking-tighter leading-[0.9] transform scale-y-110" style={{ color: config.theme.pages.player.leftPanelColor || '#2d1b0e' }}>{content.logistics.title}</h2>
+                <div className="mt-4 border-b-2 border-dashed w-1/2 mx-auto" style={{ borderColor: config.theme.pages.player.leftPanelColor || '#2d1b0e' }} />
               </div>
 
               <div className="w-full flex-1 flex flex-col justify-center space-y-10 py-4 relative pl-8">
                 {/* Track 01: Ceremony */}
                 <div className="flex flex-col items-center group cursor-default relative">
-                  <TrackNumber num="01" />
+                  <TrackNumber num="01" color={config.theme.pages.player.glowColor} />
                   <div className="flex items-baseline gap-3 mb-1">
-                    <span className="font-sans font-bold text-2xl text-[#2d1b0e]">{content.logistics.ceremony.time}</span>
-                    <span className="font-serif italic text-xl text-[#8c7b66]">Ceremony</span>
+                    <span className="font-sans font-bold text-2xl" style={{ color: config.theme.pages.player.leftPanelColor || '#2d1b0e' }}>{content.logistics.ceremony.time}</span>
+                    <span className="font-serif italic text-xl" style={{ color: config.theme.pages.player.leftPanelColor || '#8c7b66' }}>Ceremony</span>
                   </div>
-                  <div className="w-4/5 border-t border-[#d4b483] pt-2 mt-1">
-                    <span className="block font-serif font-bold text-[#2d1b0e] uppercase tracking-widest text-sm mb-1">{content.logistics.ceremony.venue}</span>
-                    <span className="block font-serif italic text-[#5c4033] text-sm">{content.logistics.ceremony.address}</span>
+                  <div className="w-4/5 border-t pt-2 mt-1" style={{ borderColor: config.theme.pages.player.glowColor || '#d4b483' }}>
+                    <span className="block font-serif font-bold uppercase tracking-widest text-sm mb-1" style={{ color: config.theme.pages.player.leftPanelColor || '#2d1b0e' }}>{content.logistics.ceremony.venue}</span>
+                    <span className="block font-serif italic text-sm" style={{ color: config.theme.pages.player.leftPanelColor || '#5c4033' }}>{content.logistics.ceremony.address}</span>
                     <a
                       href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(content.logistics.ceremony.address || content.logistics.ceremony.venue)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 mt-2 text-xs font-sans font-medium text-[#8c7b66] hover:text-[#2d1b0e] transition-colors uppercase tracking-wider"
+                      className="inline-flex items-center gap-1.5 mt-2 text-xs font-sans font-medium hover:opacity-80 transition-colors uppercase tracking-wider"
+                      style={{ color: config.theme.pages.player.glowColor || '#8c7b66' }}
                     >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="#ef4444" stroke="#7f1d1d" strokeWidth="1"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" fill="white" /></svg>
-                      <span className="text-[#a855f7] font-bold border-b border-[#a855f7]/30">Get Directions</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill={config.theme.pages.player.glowColor || "#ef4444"} stroke={config.theme.pages.player.glowColor || "#7f1d1d"} strokeWidth="1"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" fill="white" /></svg>
+                      <span className="font-bold border-b" style={{ color: config.theme.pages.player.glowColor || '#a855f7', borderColor: (config.theme.pages.player.glowColor || '#a855f7') + '4d' }}>Get Directions</span>
                     </a>
                   </div>
                 </div>
@@ -798,22 +812,23 @@ export const VintageVinylTheme: React.FC<VintageVinylThemeProps> = ({ initialDat
 
                 {/* Track 02: Reception */}
                 <div className="flex flex-col items-center group cursor-default relative">
-                  <TrackNumber num="02" />
+                  <TrackNumber num="02" color={config.theme.pages.player.glowColor} />
                   <div className="flex items-baseline gap-3 mb-1">
-                    <span className="font-sans font-bold text-2xl text-[#2d1b0e]">{content.logistics.reception.time}</span>
-                    <span className="font-serif italic text-xl text-[#8c7b66]">Reception</span>
+                    <span className="font-sans font-bold text-2xl" style={{ color: config.theme.pages.player.leftPanelColor || '#2d1b0e' }}>{content.logistics.reception.time}</span>
+                    <span className="font-serif italic text-xl" style={{ color: config.theme.pages.player.leftPanelColor || '#8c7b66' }}>Reception</span>
                   </div>
-                  <div className="w-4/5 border-t border-[#d4b483] pt-2 mt-1">
-                    <span className="block font-serif font-bold text-[#2d1b0e] uppercase tracking-widest text-sm mb-1">{content.logistics.reception.venue}</span>
-                    <span className="block font-serif italic text-[#5c4033] text-sm">{content.logistics.reception.address}</span>
+                  <div className="w-4/5 border-t pt-2 mt-1" style={{ borderColor: config.theme.pages.player.glowColor || '#d4b483' }}>
+                    <span className="block font-serif font-bold uppercase tracking-widest text-sm mb-1" style={{ color: config.theme.pages.player.leftPanelColor || '#2d1b0e' }}>{content.logistics.reception.venue}</span>
+                    <span className="block font-serif italic text-sm" style={{ color: config.theme.pages.player.leftPanelColor || '#5c4033' }}>{content.logistics.reception.address}</span>
                     <a
                       href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(content.logistics.reception.address || content.logistics.reception.venue)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 mt-2 text-xs font-sans font-medium text-[#8c7b66] hover:text-[#2d1b0e] transition-colors uppercase tracking-wider"
+                      className="inline-flex items-center gap-1.5 mt-2 text-xs font-sans font-medium hover:opacity-80 transition-colors uppercase tracking-wider"
+                      style={{ color: config.theme.pages.player.glowColor || '#8c7b66' }}
                     >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="#ef4444" stroke="#7f1d1d" strokeWidth="1"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" fill="white" /></svg>
-                      <span className="text-[#a855f7] font-bold border-b border-[#a855f7]/30">Get Directions</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill={config.theme.pages.player.glowColor || "#ef4444"} stroke={config.theme.pages.player.glowColor || "#7f1d1d"} strokeWidth="1"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" fill="white" /></svg>
+                      <span className="font-bold border-b" style={{ color: config.theme.pages.player.glowColor || '#a855f7', borderColor: (config.theme.pages.player.glowColor || '#a855f7') + '4d' }}>Get Directions</span>
                     </a>
                   </div>
                 </div>
@@ -826,10 +841,16 @@ export const VintageVinylTheme: React.FC<VintageVinylThemeProps> = ({ initialDat
         );
       case 'gallery':
         return (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex flex-col h-full">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="flex flex-col h-full"
+            style={{ background: 'transparent' }}
+          >
             <div className="mb-6 flex flex-col items-center shrink-0">
-              <h2 className="font-sans font-black text-2xl md:text-3xl uppercase tracking-tighter text-[#2d1b0e] leading-none mb-2">{content.gallery.title}</h2>
-              <div className="h-[2px] w-24 bg-[#d4b483]" />
+              <h2 className="font-sans font-black text-2xl md:text-3xl uppercase tracking-tighter leading-none mb-2" style={{ color: config.theme.pages.player.leftPanelColor || '#2d1b0e' }}>{content.gallery.title}</h2>
+              <div className="h-[2px] w-24" style={{ backgroundColor: config.theme.pages.player.glowColor || '#d4b483' }} />
             </div>
             <div className="relative flex-1 overflow-y-auto fader-scrollbar px-4 pt-4">
               <div className="grid grid-cols-2 gap-6 pb-20">
@@ -847,9 +868,18 @@ export const VintageVinylTheme: React.FC<VintageVinylThemeProps> = ({ initialDat
                       initial={{ rotate: rotate, y: translateY }}
                       whileHover={{ scale: 1.05, zIndex: 10, rotate: 0, y: translateY - 5, transition: { duration: 0.2 } }}
                     >
-                      <div className="bg-white p-3 shadow-[0_4px_12px_rgba(0,0,0,0.2)] group-hover:shadow-2xl transition-all duration-300 relative">
+                      <div
+                        className={`p-3 transition-all duration-300 relative ${config.theme.pages.player.photoFrameStyle === 'minimal' ? 'bg-transparent' : 'bg-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] group-hover:shadow-2xl'}`}
+                      >
                         {/* Tape Effects within grid */}
-                        {index % 3 === 0 && <div className="tape-corner" style={{ top: '-12px', left: '50%', width: '4rem', transform: 'translateX(-50%) rotate(2deg)' }}></div>}
+                        {config.theme.pages.player.photoFrameStyle === 'tape' && (
+                          <img
+                            src="/themes/vintage-vinyl/masking_tape.png"
+                            alt=""
+                            className="absolute -top-4 -left-4 w-16 rotate-[-20deg] z-10 drop-shadow-md opacity-90"
+                          />
+                        )}
+                        {config.theme.pages.player.photoFrameStyle !== 'minimal' && config.theme.pages.player.photoFrameStyle !== 'tape' && index % 3 === 0 && <div className="tape-corner" style={{ top: '-12px', left: '50%', width: '4rem', transform: 'translateX(-50%) rotate(2deg)' }}></div>}
 
                         <div className="aspect-[4/5] overflow-hidden bg-neutral-100 relative mb-4">
                           <img src={src} alt="Gallery" className="w-full h-full object-cover filter sepia-[0.2] contrast-[1.1]" />
@@ -1068,10 +1098,10 @@ export const VintageVinylTheme: React.FC<VintageVinylThemeProps> = ({ initialDat
               onClick={handleOpen}
             >
               {/* === CORNER DECORATIONS (Z-30, overhanging the card) === */}
-              {config.theme.pages.gatekeeper.cornerAsset && (
+              {config.theme.pages.gatekeeper.cornerShape && (
                 <>
                   {[0, 90, 180, 270].map((rotation, i) => {
-                    const isSpike = config.theme.pages.gatekeeper.cornerAsset === 'metal-spike';
+                    const { path, viewBox, size, color } = config.theme.pages.gatekeeper.cornerShape!;
                     const positionStyle = i === 0 ? { top: '-8px', left: '-8px' } :
                       i === 1 ? { top: '-8px', right: '-8px' } :
                         i === 2 ? { bottom: '-8px', right: '-8px' } :
@@ -1083,20 +1113,21 @@ export const VintageVinylTheme: React.FC<VintageVinylThemeProps> = ({ initialDat
                         className="absolute z-30 pointer-events-none"
                         style={{
                           ...positionStyle,
-                          width: isSpike ? '60px' : '48px',
-                          height: isSpike ? '60px' : '48px',
+                          width: size || '60px',
+                          height: size || '60px',
                           transform: `rotate(${rotation}deg)`
                         }}
                       >
-                        {isSpike ? (
-                          <MetalSpike className="w-full h-full" />
-                        ) : (
-                          <img
-                            src={config.theme.pages.gatekeeper.cornerAsset}
-                            alt=""
-                            className="w-full h-full object-contain opacity-90"
-                          />
-                        )}
+                        <svg
+                          viewBox={viewBox}
+                          className="w-full h-full drop-shadow-lg"
+                          style={{
+                            fill: color || config.theme.global.palette.primary,
+                            filter: 'drop-shadow(2px 4px 6px rgba(0,0,0,0.8))'
+                          }}
+                        >
+                          <path d={path} />
+                        </svg>
                       </div>
                     );
                   })}
@@ -1112,11 +1143,10 @@ export const VintageVinylTheme: React.FC<VintageVinylThemeProps> = ({ initialDat
                     backgroundImage: `url('${config.theme.pages.gatekeeper.cardTexture}')`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
+                    backgroundBlendMode: 'overlay'
                   }),
                   borderRadius: config.theme.pages.gatekeeper.cardShape === 'rounded' ? '16px' : '4px',
-                  boxShadow: config.theme.pages.gatekeeper.neonColor
-                    ? `0 0 0 2px ${config.theme.pages.gatekeeper.neonColor}, 0 20px 60px rgba(0,0,0,0.7)`
-                    : `0 0 0 1px ${config.theme.global.palette.primary}40, 0 20px 60px rgba(0,0,0,0.7)`
+                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.9)' // Heavy Material Shadow
                 }}
               >
                 {/* Texture Overlay for richness */}
@@ -1244,9 +1274,25 @@ export const VintageVinylTheme: React.FC<VintageVinylThemeProps> = ({ initialDat
             {/* LEFT PANEL: Liner Notes */}
             <motion.div
               className="w-full md:w-1/2 h-[70%] md:h-full relative p-6 md:p-12 overflow-hidden shadow-[5px_0_20px_rgba(0,0,0,0.3)] z-20"
-              style={{ backgroundColor: '#f4e4bc', color: '#1e100b' }} // FIXME: Add paperColor to new schema or use default
+              style={{
+                backgroundImage: config.theme.pages.player.leftPanelTexture
+                  ? `linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), url("${config.theme.pages.player.leftPanelTexture}")`
+                  : 'none',
+                backgroundColor: config.theme.pages.player.leftPanelTexture ? 'transparent' : '#f4e4bc',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center', // Added this line
+                color: config.theme.pages.player.leftPanelColor || '#1e100b',
+                // Add text shadow for pop
+                textShadow: config.theme.pages.player.leftPanelTexture ? '0 1px 2px rgba(0,0,0,0.8)' : 'none'
+              }}
             >
-              <div className="absolute inset-0 pointer-events-none mix-blend-multiply opacity-40" style={{ backgroundImage: `url("${NOISE_SVG}")` }} />
+              <div
+                className="absolute inset-0 pointer-events-none mix-blend-multiply opacity-40"
+                style={{
+                  backgroundImage: `url("${NOISE_SVG}")`,
+                  filter: config.theme.pages.player.leftPanelTexture ? 'invert(1) opacity(0.3)' : 'none'
+                }}
+              />
               <div className="absolute inset-4 md:inset-8 border-4 border-double border-[#d4af37] opacity-50 pointer-events-none" />
               <button onClick={() => setIsOpen(false)} className="absolute top-6 left-6 md:top-10 md:left-10 z-50 bg-[#2d1b0e]/10 hover:bg-[#2d1b0e]/20 border border-[#8c7b66]/40 px-3 py-1.5 rounded text-[#5c4033] hover:text-[#2d1b0e] transition-all font-sans text-xs tracking-widest uppercase flex items-center gap-2 font-medium shadow-sm">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
@@ -1267,7 +1313,17 @@ export const VintageVinylTheme: React.FC<VintageVinylThemeProps> = ({ initialDat
               initial={{ x: 100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 50 }}
-              className="w-full md:w-1/2 h-[30%] md:h-full relative bg-[#151515] flex flex-col items-center justify-center border-t-2 md:border-t-0 md:border-l-2 border-[#2d1b0e] shadow-inner overflow-hidden"
+              className={`w-full md:w-1/2 h-[30%] md:h-full relative flex flex-col items-center justify-center border-t-2 md:border-t-0 md:border-l-2 border-[#2d1b0e] shadow-inner overflow-hidden ${isPlaying ? 'bg-[#1a1a1a]' : 'bg-[#111]'}`}
+              style={{
+                backgroundImage: config.theme.pages.player.rightPanelTexture
+                  ? `url("${config.theme.pages.player.rightPanelTexture}")`
+                  : 'none',
+                backgroundSize: config.theme.pages.player.rightPanelTexture ? '150px' : 'cover', // Tighter repeat for mesh
+                backgroundPosition: 'center',
+                backgroundColor: config.theme.pages.player.rightPanelTexture ? '#333333' : undefined, // Lightened from #050505 to reveal texture
+                backgroundBlendMode: config.theme.pages.player.rightPanelTexture ? 'multiply' : 'normal',
+                boxShadow: config.theme.pages.player.rightPanelTexture ? 'inset 0 0 80px 20px rgba(0,0,0,0.9)' : 'none' // Deep recession effect
+              }}
             >
               {/* Mobile indicator - pulsing border highlight */}
               <motion.div
@@ -1301,7 +1357,14 @@ export const VintageVinylTheme: React.FC<VintageVinylThemeProps> = ({ initialDat
               {/* Turntable Assembly Wrapper - locks arm to record */}
               <div className="relative">
                 <div className="relative w-[35vh] h-[35vh] md:w-[450px] md:h-[450px] bg-[#222] rounded-full border-8 border-[#111] shadow-[0_0_50px_rgba(0,0,0,0.8)] flex items-center justify-center">
-                  <VinylRecord label={content.hero.title} subLabel={content.hero.date} isPlaying={isPlaying} className="w-[92%] h-[92%]" texture={config.theme.global.assets.recordTexture} />
+                  <VinylRecord
+                    label={content.hero.title}
+                    subLabel={content.hero.date}
+                    isPlaying={isPlaying}
+                    className="w-[92%] h-[92%]"
+                    texture={config.theme.global.assets.recordTexture}
+                    glowColor={config.theme.pages.player.glowColor}
+                  />
                 </div>
 
                 {/* SVG ToneArm Component - Positioned relative to the record wrapper */}
@@ -1321,7 +1384,11 @@ export const VintageVinylTheme: React.FC<VintageVinylThemeProps> = ({ initialDat
                   </div>
                   {/* Replaced old RSVP button with Ticket Component */}
                   <div className="flex flex-col gap-2 items-center pb-1 -ml-2 transform scale-90 origin-bottom-left md:scale-100">
-                    <RSVPTicket onClick={() => setIsRSVPOpen(true)} label={content.rsvp.ticketTitle} />
+                    <RSVPTicket
+                      onClick={() => setIsRSVPOpen(true)}
+                      label={content.rsvp.ticketTitle}
+                      imageSrc={config.theme.pages.player.rsvpButtonAsset}
+                    />
                   </div>
                 </div>
                 <div className="flex flex-col gap-3 items-end relative">

@@ -38,7 +38,13 @@ export interface GatekeeperConfig {
   cardTexture?: string;        // e.g., Leather URL
   cardColor?: string;          // Fallback color
   cardShape?: 'square' | 'rounded';
-  cornerAsset?: string;        // URL to Spike/Fan decoration
+  // The Decorations
+  cornerShape?: {
+    path: string;       // The SVG path data (d attribute)
+    viewBox: string;    // The SVG viewBox
+    color?: string;     // Optional override color
+    size?: string;      // Width/Height
+  };
 
   // The Button
   buttonStyle?: 'solid' | 'glow' | 'outline';
@@ -49,6 +55,17 @@ export interface GatekeeperConfig {
 export interface PlayerConfig {
   backgroundValue: string; // Readable texture for lyrics
   layout: 'standard' | 'minimal';
+  // Left Panel (Content)
+  leftPanelTexture?: string;   // URL for the booklet background
+  leftPanelColor?: string;     // Text color
+
+  // Right Panel (Player)
+  rightPanelTexture?: string; // Optional background for the player side
+  glowColor?: string;          // The color of the beat pulse
+
+  // Elements
+  photoFrameStyle?: 'polaroid' | 'tape' | 'minimal';
+  rsvpButtonAsset?: string; // Path to the ticket image (e.g., "/assets/ticket.png")
 }
 
 export interface VinylThemeConfig {
@@ -140,7 +157,10 @@ export const defaultContent: VinylThemeConfig = {
       },
       player: {
         backgroundValue: "#ffffff",
-        layout: "standard"
+        layout: "standard",
+        leftPanelColor: "#1e100b",
+        glowColor: "#a855f7", // Default Purple
+        photoFrameStyle: "polaroid"
       }
     }
   },
@@ -253,7 +273,9 @@ export function mergeConfig(nicheData: any): VinylThemeConfig {
         },
         player: {
           backgroundValue: nicheData.backgroundTexture || "",
-          layout: "standard"
+          layout: "standard",
+          leftPanelColor: palette.envelope, // Fallback
+          glowColor: nicheData.color || palette.accent, // Fallback
         }
       }
     }

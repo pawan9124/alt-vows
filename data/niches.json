@@ -33,17 +33,28 @@
                     "backgroundTexture": "/themes/vintage-vinyl/rock_bg.jpg",
                     "showVinylBackdrop": true,
                     "neonColor": "#e02e2e",
-                    "cardTexture": "/themes/vintage-vinyl/leather_texture.jpg",
+                    "cardTexture": "/themes/vintage-vinyl/leather_grain.jpeg",
                     "cardColor": "#1a1a1a",
                     "cardShape": "square",
-                    "cornerAsset": "metal-spike",
+                    "cornerShape": {
+                        "path": "M0,0 L50,0 L55,15 L15,15 L15,55 L0,50 Z M10,10 L30,30 L90,90 L35,45 L10,10 Z",
+                        "viewBox": "0 0 100 100",
+                        "size": "60px",
+                        "color": "#2a2a2a"
+                    },
                     "buttonStyle": "glow",
                     "buttonShape": "pill",
                     "buttonColor": "#e02e2e"
                 },
                 "player": {
                     "backgroundValue": "/themes/vintage-vinyl/concrete-dark.jpg",
-                    "layout": "standard"
+                    "layout": "standard",
+                    "leftPanelTexture": "/themes/vintage-vinyl/leather_grain.jpeg",
+                    "leftPanelColor": "#FFFFFF",
+                    "glowColor": "#e02e2e",
+                    "photoFrameStyle": "tape",
+                    "rsvpButtonAsset": "/themes/vintage-vinyl/vip_pass.png",
+                    "rightPanelTexture": "/themes/vintage-vinyl/speaker_mesh.jpeg"
                 }
             }
         }
