@@ -64,7 +64,7 @@ export interface PlayerConfig {
   glowColor?: string;          // The color of the beat pulse
 
   // Elements
-  photoFrameStyle?: 'polaroid' | 'tape' | 'minimal';
+  photoFrameStyle?: 'polaroid' | 'tape' | 'minimal' | 'gold';
   rsvpButtonAsset?: string; // Path to the ticket image (e.g., "/assets/ticket.png")
 }
 

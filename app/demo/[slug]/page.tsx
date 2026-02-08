@@ -1,38 +1,91 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import { notFound } from 'next/navigation';
+import { AnimatePresence, motion } from 'framer-motion';
 import niches from '@/data/niches.json';
-import { registry } from '@/components/themes/registry';
+import { LandingPage } from '@/components/themes/vintage-vinyl/LandingPage';
+import { Gatekeeper } from '@/components/themes/vintage-vinyl/Gatekeeper';
+import { Player } from '@/components/themes/vintage-vinyl/Player';
+import { EditorSidebar } from '@/components/editor/EditorSidebar';
+import { useEditorStore } from '@/store/useEditorStore';
+import { mergeConfig } from '@/components/themes/vintage-vinyl/config';
 
-export default async function DemoPage({ params }: { params: Promise<{ slug: string }> }) {
-    // Await the params (Next.js 15 requirement)
-    const { slug } = await params;
+// Force dynamic rendering since we are using a simple JSON lookup
+export const dynamic = 'force-dynamic';
 
-    // 1. Find the Niche Data
-    const niche = niches.find((n) => n.slug === slug);
+interface Props {
+    params: Promise<{ slug: string }>;
+}
 
-    if (!niche) {
-        return notFound();
-    }
+export default function Page({ params }: Props) {
+    // Unwrap params using React.use()
+    const { slug } = React.use(params);
 
-    // 2. Load the Component
-    const ThemeComponent = registry[niche.archetypeId];
+    // 1. Find the static config based on URL
+    const staticConfig = niches.find((n) => n.slug === slug);
 
-    // 3. FORCE GATEKEEPER MODE (The Fix)
-    // We create a copy of the data but REMOVE the landing config.
-    // This tricks the component into thinking no landing page exists.
-    const demoData = {
-        ...niche,
-        theme: {
-            ...(niche as any).theme,
-            pages: {
-                ...(niche as any).theme?.pages,
-                landing: undefined // <--- THIS LINE FORCES THE CARD VIEW
-            }
+    // 2. Hook into the Live Store
+    const { activeTheme, setTheme } = useEditorStore();
+
+    // 3. Local State for "Invite" -> "Player" transition
+    const [isInviteOpen, setIsInviteOpen] = useState(false);
+
+    // 4. Initialize Store on Mount
+    useEffect(() => {
+        if (staticConfig) {
+            setTheme(mergeConfig(staticConfig));
         }
-    };
+    }, [staticConfig, setTheme]);
+
+    // 5. Safety Check
+    if (!staticConfig) return notFound();
+
+    // 6. DECISION: Render from Store (if ready) or Static (SSR fallback)
+    const currentConfig = activeTheme || mergeConfig(staticConfig);
+
+    // 7. Extract theme parts (Universal Helper)
+    const theme = currentConfig.theme || {};
+    const pages = theme.pages || currentConfig.pages || {}; // Handle both structures (Rock vs Jazz legacy)
+    const hero = currentConfig.hero || {};
 
     return (
-        <main className="w-full h-screen overflow-hidden">
-            <ThemeComponent initialData={demoData} />
+        <main className="relative min-h-screen bg-black overflow-hidden">
+            {/* THE LIVE EDITOR SIDEBAR */}
+            <EditorSidebar />
+
+            {/* 
+        NOTE: Landing Page is currently HIDDEN for the demo route per user request.
+        The user wants the "Invite Link" experience (Gatekeeper -> Player).
+        Uncomment this section if a full site demo is needed.
+      */}
+            {/* 
+      <section className="min-h-screen relative z-10">
+        <LandingPage config={{ ...currentConfig, ...hero, ...pages.invite }} />
+      </section>
+      */}
+
+            {/* APP EXPERIENCE: Gatekeeper -> Player */}
+            <AnimatePresence mode="wait">
+                {!isInviteOpen ? (
+                    <motion.div key="gatekeeper-wrapper" className="absolute inset-0 z-20">
+                        <Gatekeeper
+                            config={{ ...currentConfig, ...pages.gatekeeper }}
+                            onOpen={() => setIsInviteOpen(true)}
+                        />
+                    </motion.div>
+                ) : (
+                    <motion.div key="player-wrapper" className="absolute inset-0 z-30">
+                        <Player
+                            config={{ ...currentConfig, ...pages.player }}
+                            onClose={() => setIsInviteOpen(false)}
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </main>
     );
 }
+
+
+

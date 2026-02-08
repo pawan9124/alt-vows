@@ -61,18 +61,88 @@
     },
     {
         "slug": "jazz-lounge-wedding",
-        "title": "Jazz Lounge Wedding Invitations",
-        "metaDescription": "Smooth, elegant vinyl invites for a classy evening.",
         "archetypeId": "vintage-vinyl",
-        "h1": "A Night of Smooth Jazz",
-        "color": "#d4af37",
-        "names": "Miles & Ella",
-        "recordTexture": "/themes/vintage-vinyl/gold_label.png",
-        "audioTrack": "/themes/vintage-vinyl/jazz_demo.mp3",
-        "backgroundTexture": "/themes/vintage-vinyl/jazz_bg.jpg",
-        "layoutMode": "landing",
-        "googleFont": "Playfair Display",
-        "vibe": "luxury"
+        "hero": {
+            "title": "A Night of Smooth Jazz",
+            "names": "Miles & Ella",
+            "date": "DEC 31, 2026",
+            "location": "The Blue Note"
+        },
+        "theme": {
+            "global": {
+                "palette": {
+                    "primary": "#d4af37",
+                    "secondary": "#2c0404",
+                    "text": "#f4e4bc"
+                },
+                "typography": {
+                    "headingFont": "Playfair Display",
+                    "bodyFont": "Lato"
+                },
+                "assets": {
+                    "recordTexture": "/themes/jazz-lounge/assets/red_velvet.jpeg"
+                }
+            },
+            "pages": {
+                "landing": {
+                    "mode": "split-screen",
+                    "backgroundValue": "/themes/jazz-lounge/assets/red_velvet.jpeg",
+                    "titleSize": "large"
+                },
+                "gatekeeper": {
+                    "backgroundTexture": "/themes/jazz-lounge/assets/red_velvet.jpeg",
+                    "showVinylBackdrop": true,
+                    "neonColor": "#d4af37",
+                    "cardTexture": "/themes/jazz-lounge/assets/red_velvet.jpeg",
+                    "cardColor": "#1a0b0b",
+                    "cardShape": "rounded",
+                    "buttonStyle": "classic",
+                    "buttonShape": "pill",
+                    "buttonColor": "#d4af37"
+                },
+                "player": {
+                    "layout": "standard",
+                    "leftPanelTexture": "/themes/jazz-lounge/assets/red_velvet.jpeg",
+                    "leftPanelColor": "#ffffff",
+                    "rightPanelTexture": "/themes/jazz-lounge/assets/red_velvet.jpeg",
+                    "glowColor": "#d4af37",
+                    "photoFrameStyle": "gold",
+                    "rsvpButtonAsset": "/themes/jazz-lounge/assets/gold_ticket.png"
+                }
+            }
+        },
+        "story": {
+            "title": "Liner Notes",
+            "description": "Propelled by a shared love for Coltrane and late-night falafel, our jam session has lasted five years. Now, we're making it official.",
+            "image": "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=800",
+            "signOff": "With Soul,"
+        },
+        "logistics": {
+            "title": "The Setlist",
+            "ceremony": {
+                "time": "5:30 PM",
+                "venue": "The Blue Note Jazz Club",
+                "address": "131 W 3rd St, New York, NY 10012"
+            },
+            "reception": {
+                "time": "7:00 PM",
+                "venue": "The Rooftop Lounge",
+                "address": "Just upstairs!"
+            }
+        },
+        "gallery": {
+            "title": "Studio Sessions",
+            "images": [
+                "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=800",
+                "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&q=80&w=800",
+                "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=800"
+            ]
+        },
+        "rsvp": {
+            "ticketTitle": "Admit One",
+            "deadline": "May 01, 2025",
+            "confirmationMessage": "You're on the list. Can't wait!"
+        }
     },
     {
         "slug": "cyberpunk-wedding",
