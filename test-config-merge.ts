@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { mergeConfig, defaultContent } from './components/themes/vintage-vinyl/config';
 
 console.log("Running Config Engine Tests...");

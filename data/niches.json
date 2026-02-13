@@ -146,15 +146,51 @@
     },
     {
         "slug": "cyberpunk-wedding",
-        "title": "Cyberpunk Wedding Invitations",
-        "metaDescription": "Neon-soaked, futuristic vinyl invites.",
         "archetypeId": "vintage-vinyl",
-        "h1": "Neon Lights & Love",
-        "color": "#00f0ff",
-        "names": "Neo & Trinity",
-        "layoutMode": "landing",
-        "googleFont": "Orbitron",
-        "backgroundTexture": "/themes/vintage-vinyl/cyberpunk_bg.jpg",
-        "vibe": "dark"
+        "hero": {
+            "title": "Neon Lights & Love",
+            "names": "Neo & Trinity",
+            "date": "MAR 15, 2027",
+            "location": "The Grid"
+        },
+        "theme": {
+            "global": {
+                "palette": {
+                    "primary": "#00f0ff",
+                    "secondary": "#0a0014",
+                    "text": "#e0e0ff"
+                },
+                "typography": {
+                    "headingFont": "Orbitron",
+                    "bodyFont": "Roboto"
+                },
+                "assets": {
+                    "recordTexture": "/themes/vintage-vinyl/record-red.png"
+                }
+            },
+            "pages": {
+                "landing": {
+                    "mode": "split-screen",
+                    "backgroundValue": "/themes/vintage-vinyl/cyberpunk_bg.jpg",
+                    "titleSize": "huge"
+                },
+                "gatekeeper": {
+                    "backgroundTexture": "/themes/vintage-vinyl/cyberpunk_bg.jpg",
+                    "showVinylBackdrop": true,
+                    "neonColor": "#00f0ff",
+                    "cardColor": "#0a0014",
+                    "cardShape": "square",
+                    "buttonStyle": "glow",
+                    "buttonShape": "pill",
+                    "buttonColor": "#00f0ff"
+                },
+                "player": {
+                    "backgroundValue": "/themes/vintage-vinyl/cyberpunk_bg.jpg",
+                    "layout": "standard",
+                    "glowColor": "#00f0ff",
+                    "photoFrameStyle": "minimal"
+                }
+            }
+        }
     }
 ]

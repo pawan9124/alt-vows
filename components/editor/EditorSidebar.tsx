@@ -1,11 +1,21 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useEditorStore, getNestedValue } from '@/store/useEditorStore';
 import { vintageVinylSchema } from '@/data/schemas/vintageVinly';
-import { X, Settings } from 'lucide-react';
+import { voyagerSchema } from '@/data/schemas/voyager';
+import { X, Settings, Save, Loader2 } from 'lucide-react';
 import { ImageField } from './fields/ImageField';
 import { ImageListField } from './fields/ImageListField';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/hooks/useAuth';
+import { PublishButton } from '@/components/PublishButton';
+
+// Schema registry — maps theme_id to its editor schema
+const SCHEMA_REGISTRY: Record<string, any[]> = {
+    'vintage-vinyl': vintageVinylSchema,
+    'the-voyager': voyagerSchema,
+};
 
 interface SchemaField {
     key: string;
@@ -17,8 +27,53 @@ interface SchemaField {
 
 export const EditorSidebar = () => {
     const { activeTheme, updateField, isOpen, toggleEditor } = useEditorStore();
+    const { user } = useAuth();
+    const [isSaving, setIsSaving] = useState(false);
+
+    // Resolve the correct theme_id from activeTheme
+    const themeId = (activeTheme as any)?.themeId || (activeTheme as any)?.theme_id || 'vintage-vinyl';
+
+    // Dynamically select the schema based on theme_id
+    const activeSchema = useMemo(() => {
+        return SCHEMA_REGISTRY[themeId] || vintageVinylSchema;
+    }, [themeId]);
 
     if (!activeTheme) return null;
+
+    // --- THE NEW SAVE FUNCTION ---
+    const handleSave = async () => {
+        // Gate behind auth
+        if (!user) {
+            alert('Please sign in to save your changes. Visit /auth to log in.');
+            return;
+        }
+
+        setIsSaving(true);
+        try {
+            // 1. We use the 'slug' (URL) as the unique ID
+            const slug = activeTheme.slug;
+
+            // 2. Write to Supabase (include owner_id for RLS)
+            const { error } = await supabase
+                .from('websites')
+                .upsert({
+                    slug: slug,
+                    theme_id: themeId,
+                    content: activeTheme,
+                    owner_id: user.id
+                });
+
+            if (error) throw error;
+
+            alert('Success! Your theme is saved to the cloud.');
+        } catch (err) {
+            console.error(err);
+            alert('Error saving: ' + (err as Error).message);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+    // -----------------------------
 
     return (
         <>
@@ -43,7 +98,7 @@ export const EditorSidebar = () => {
 
                 {/* Form Inputs */}
                 <div className="p-6 overflow-y-auto h-[calc(100vh-64px)] space-y-8 pb-20">
-                    {vintageVinylSchema.map((section) => (
+                    {activeSchema.map((section) => (
                         <div key={section.id} className="space-y-4">
                             <h3 className="text-xs font-bold text-yellow-500/80 uppercase tracking-widest border-b border-white/5 pb-2">
                                 {section.label}
@@ -129,13 +184,31 @@ export const EditorSidebar = () => {
                         </div>
                     ))}
 
-                    {/* Dummy Save Button */}
-                    <button className="w-full py-3 bg-yellow-600 hover:bg-yellow-500 text-black font-bold text-sm rounded transition-all mt-8 uppercase tracking-wide">
-                        Save Changes (Demo)
+                    {/* REAL SAVE BUTTON */}
+                    <button
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="w-full py-3 bg-yellow-600 hover:bg-yellow-500 disabled:bg-zinc-800 text-black font-bold text-sm rounded transition-all mt-8 uppercase tracking-wide flex items-center justify-center gap-2"
+                    >
+                        {isSaving ? (
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" /> Saving...
+                            </>
+                        ) : (
+                            <>
+                                <Save className="w-4 h-4" /> Save Changes
+                            </>
+                        )}
                     </button>
+
+                    {/* Publish Button — only visible for demo sites */}
+                    {activeTheme?.slug && (activeTheme as any).status !== 'production' && (
+                        <div className="mt-3">
+                            <PublishButton slug={activeTheme.slug} compact />
+                        </div>
+                    )}
                 </div>
             </div>
         </>
     );
 };
-

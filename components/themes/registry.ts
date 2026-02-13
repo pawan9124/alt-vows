@@ -1,6 +1,8 @@
 // Theme Component Imports
-import { VintageVinylTheme } from './vintage-vinyl';
+import VintageVinylPkg from './vintage-vinyl';
 import TheVoyagerThemePkg from './the-voyager';
+
+const VintageVinylTheme = VintageVinylPkg.component;
 
 // =============================================================================
 // THEME REGISTRY
@@ -9,14 +11,14 @@ import TheVoyagerThemePkg from './the-voyager';
 
 // The Menu of available themes - keyed by archetypeId
 export const THEMES: Record<string, any> = {
-  'vintage-vinyl': { component: VintageVinylTheme }, // Maintain backward compat structure if needed elsewhere
+  'vintage-vinyl': VintageVinylPkg,
   'the-voyager': TheVoyagerThemePkg,
 };
 
 // Registry for Dynamic Page Controller (Components Only)
 export const registry: Record<string, React.ComponentType<any>> = {
   'vintage-vinyl': VintageVinylTheme,
-  // 'the-voyager': TheVoyagerThemePkg.component, // Uncomment when Voyager is ready for dynamic routing
+  'the-voyager': TheVoyagerThemePkg.component,
 };
 
 // Helper to get the theme component by archetypeId

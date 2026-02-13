@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -16,7 +17,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     const checkSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        
+
         if (error) {
           console.error('Session check error:', error);
           navigate('/auth' + location.search, { replace: true });

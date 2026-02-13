@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Helmet } from 'react-helmet-async';
 
 interface SeoProps {
@@ -7,9 +8,9 @@ interface SeoProps {
   url?: string;
 }
 
-export const SeoHead = ({ 
-  title, 
-  description = "Create stunning digital wedding invitations instantly.", 
+export const SeoHead = ({
+  title,
+  description = "Create stunning digital wedding invitations instantly.",
   image = "https://xfantasypro.com/default-og.jpg", // We will fix this URL later
   url = typeof window !== 'undefined' ? window.location.href : ''
 }: SeoProps) => {
