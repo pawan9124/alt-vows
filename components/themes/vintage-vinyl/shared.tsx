@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 
@@ -460,6 +460,16 @@ export const RSVPModal = ({ onClose, confirmationMessage, deadline, weddingId }:
     const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
     const [errorMsg, setErrorMsg] = useState('');
 
+    // Check if already submitted
+    useEffect(() => {
+        if (weddingId) {
+            try {
+                const submitted = localStorage.getItem(`rsvp_submitted_${weddingId}`);
+                if (submitted) setStatus('success');
+            } catch { /* localStorage unavailable */ }
+        }
+    }, [weddingId]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!name.trim()) return;
@@ -485,6 +495,8 @@ export const RSVPModal = ({ onClose, confirmationMessage, deadline, weddingId }:
 
             if (error) throw error;
             setStatus('success');
+            // Remember this RSVP so we don't show the form again
+            try { localStorage.setItem(`rsvp_submitted_${weddingId}`, 'true'); } catch { /* ok */ }
         } catch (err: any) {
             console.error('RSVP error:', err);
             setStatus('error');

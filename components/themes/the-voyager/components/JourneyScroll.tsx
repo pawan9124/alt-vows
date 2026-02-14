@@ -13,7 +13,7 @@ const vintageMapBg = '/themes/the-voyager/VintageMapBackground.png';
 const leatherStraps = '/themes/the-voyager/leather_straps.png';
 const waxSeal = '/themes/the-voyager/red_wax_seal_blank.png';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../../../lib/supabase';
@@ -53,6 +53,16 @@ const JourneyScroll: React.FC<JourneyScrollProps> = ({ content }) => {
     });
     const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
+    // Check if already submitted
+    useEffect(() => {
+        if (weddingId) {
+            try {
+                const submitted = localStorage.getItem(`rsvp_submitted_${weddingId}`);
+                if (submitted) setStatus('success');
+            } catch { /* localStorage unavailable */ }
+        }
+    }, [weddingId]);
+
     const handleRSVPSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!weddingId) {
@@ -76,6 +86,8 @@ const JourneyScroll: React.FC<JourneyScrollProps> = ({ content }) => {
             if (error) throw error;
             setStatus('success');
             setRsvpForm({ name: '', attending: true, guestCount: 1 });
+            // Remember this RSVP so we don't show the form again
+            try { localStorage.setItem(`rsvp_submitted_${weddingId}`, 'true'); } catch { /* ok */ }
         } catch (err) {
             console.error(err);
             setStatus('error');
