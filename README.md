@@ -34,3 +34,18 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+
+How to genereate the redeem codes for the themes
+=====
+# Generate codes for Etsy
+curl -X POST .../api/admin/generate-codes \
+  -d '{"count": 5, "theme_id": "vintage-vinyl", "source": "etsy", "secret": "..."}'
+
+# Generate codes for LemonSqueezy
+curl -X POST .../api/admin/generate-codes \
+  -d '{"count": 5, "theme_id": "the-voyager", "source": "lemonsqueezy", "secret": "..."}'
+
+# Generate codes for Gumroad, your own store, promos, etc.
+curl -X POST .../api/admin/generate-codes \
+  -d '{"count": 3, "theme_id": "vintage-vinyl", "source": "gumroad", "secret": "..."}'

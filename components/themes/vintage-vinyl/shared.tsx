@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/lib/supabase';
 
 // --- Shared Assets ---
 
@@ -451,55 +452,181 @@ export const Signature = ({ color = '#2d1b0e' }: { color?: string }) => (
     </div>
 );
 
-export const RSVPModal = ({ onClose, confirmationMessage, deadline, weddingId }: { onClose: () => void, confirmationMessage: string, deadline: string, weddingId?: string }) => (
-    <motion.div
-        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-    >
+export const RSVPModal = ({ onClose, confirmationMessage, deadline, weddingId }: { onClose: () => void, confirmationMessage: string, deadline: string, weddingId?: string }) => {
+    const [name, setName] = useState('');
+    const [attending, setAttending] = useState(true);
+    const [guestCount, setGuestCount] = useState(1);
+    const [message, setMessage] = useState('');
+    const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+    const [errorMsg, setErrorMsg] = useState('');
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!name.trim()) return;
+
+        if (!weddingId) {
+            setStatus('error');
+            setErrorMsg('Unable to submit RSVP. Please try again later.');
+            return;
+        }
+
+        setStatus('loading');
+        try {
+            const { error } = await supabase
+                .from('guests')
+                .insert({
+                    wedding_id: weddingId,
+                    name: name.trim(),
+                    email: null,
+                    attending,
+                    plus_ones: attending ? Math.max(0, guestCount - 1) : 0,
+                    message: message.trim() || null,
+                });
+
+            if (error) throw error;
+            setStatus('success');
+        } catch (err: any) {
+            console.error('RSVP error:', err);
+            setStatus('error');
+            setErrorMsg('Something went wrong. Please try again.');
+        }
+    };
+
+    return (
         <motion.div
-            className="w-full max-w-md bg-[#fdfbf7] p-8 md:p-12 relative shadow-2xl transform rotate-1"
-            initial={{ scale: 0.9, y: 20 }}
-            animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.9, y: 20 }}
-            onClick={(e) => e.stopPropagation()}
-            style={{
-                backgroundImage: `url("${NOISE_SVG}")`
-            }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
         >
-            {/* Corner Tape */}
-            <div className="absolute -top-4 -left-4 w-24 h-8 bg-white/30 backdrop-blur-sm border border-white/40 shadow-sm transform -rotate-45 pointer-events-none" />
-            <div className="absolute -bottom-4 -right-4 w-24 h-8 bg-white/30 backdrop-blur-sm border border-white/40 shadow-sm transform -rotate-45 pointer-events-none" />
+            <motion.div
+                className="w-full max-w-md bg-[#fdfbf7] p-8 md:p-12 relative shadow-2xl transform rotate-1"
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                    backgroundImage: `url("${NOISE_SVG}")`
+                }}
+            >
+                {/* Corner Tape */}
+                <div className="absolute -top-4 -left-4 w-24 h-8 bg-white/30 backdrop-blur-sm border border-white/40 shadow-sm transform -rotate-45 pointer-events-none" />
+                <div className="absolute -bottom-4 -right-4 w-24 h-8 bg-white/30 backdrop-blur-sm border border-white/40 shadow-sm transform -rotate-45 pointer-events-none" />
 
-            <div className="text-center mb-8">
-                <h2 className="font-serif text-3xl text-[#2d1b0e] mb-2">RSVP</h2>
-                <div className="h-[2px] w-12 bg-[#d4af37] mx-auto mb-4" />
-                <p className="font-sans text-xs uppercase tracking-widest text-[#8c7b66]">Deadline: {deadline}</p>
-            </div>
-
-            <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); alert("RSVP functionality is currently in demo mode."); onClose(); }}>
-                <div className="space-y-1">
-                    <label className="block font-sans text-[10px] uppercase tracking-wider text-[#5c4033]">Full Name</label>
-                    <input type="text" className="w-full bg-transparent border-b border-[#d4b483] py-2 focus:outline-none focus:border-[#d4af37] font-serif text-lg text-[#2d1b0e] placeholder-[#2d1b0e]/30" placeholder="Miles Davis" />
+                <div className="text-center mb-8">
+                    <h2 className="font-serif text-3xl text-[#2d1b0e] mb-2">RSVP</h2>
+                    <div className="h-[2px] w-12 bg-[#d4af37] mx-auto mb-4" />
+                    <p className="font-sans text-xs uppercase tracking-widest text-[#8c7b66]">Deadline: {deadline}</p>
                 </div>
-                <div className="space-y-1">
-                    <label className="block font-sans text-[10px] uppercase tracking-wider text-[#5c4033]">Email Address</label>
-                    <input type="email" className="w-full bg-transparent border-b border-[#d4b483] py-2 focus:outline-none focus:border-[#d4af37] font-serif text-lg text-[#2d1b0e] placeholder-[#2d1b0e]/30" placeholder="miles@blue.note" />
-                </div>
 
-                <div className="pt-4">
-                    <button type="submit" className="w-full bg-[#2d1b0e] text-[#fdfbf7] py-4 font-sans font-bold uppercase tracking-widest hover:bg-[#4a3b2a] transition-colors shadow-lg">
-                        Confirm Attendance
-                    </button>
-                    <p className="text-center mt-4 font-serif italic text-sm text-[#8c7b66]">{confirmationMessage}</p>
-                </div>
-            </form>
+                {status === 'success' ? (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="text-center py-8"
+                    >
+                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M20 6L9 17l-5-5" />
+                            </svg>
+                        </div>
+                        <h3 className="font-serif text-2xl text-[#2d1b0e] mb-2">Thank You!</h3>
+                        <p className="font-serif italic text-sm text-[#8c7b66]">{confirmationMessage}</p>
+                    </motion.div>
+                ) : (
+                    <form className="space-y-5" onSubmit={handleSubmit}>
+                        {/* Name */}
+                        <div className="space-y-1">
+                            <label className="block font-sans text-[10px] uppercase tracking-wider text-[#5c4033]">Your Name *</label>
+                            <input
+                                type="text"
+                                required
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                className="w-full bg-transparent border-b border-[#d4b483] py-2 focus:outline-none focus:border-[#d4af37] font-serif text-lg text-[#2d1b0e] placeholder-[#2d1b0e]/30"
+                                placeholder="Your full name"
+                                disabled={status === 'loading'}
+                            />
+                        </div>
 
-            <button onClick={onClose} className="absolute top-4 right-4 text-[#8c7b66] hover:text-[#2d1b0e]">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
-            </button>
+                        {/* Attending Choice */}
+                        <div className="space-y-2">
+                            <label className="block font-sans text-[10px] uppercase tracking-wider text-[#5c4033]">Will You Attend?</label>
+                            <div className="flex gap-6">
+                                <label className="flex items-center gap-2 cursor-pointer group">
+                                    <div className={`w-4 h-4 rounded-full border border-[#8c7b66] flex items-center justify-center transition-colors ${attending ? 'bg-[#2d1b0e] border-[#2d1b0e]' : 'bg-transparent'}`}>
+                                        {attending && <div className="w-1.5 h-1.5 bg-[#fdfbf7] rounded-full" />}
+                                    </div>
+                                    <input type="radio" name="attending" className="sr-only" checked={attending} onChange={() => setAttending(true)} />
+                                    <span className="font-serif text-sm text-[#2d1b0e] group-hover:text-[#5c4033] transition-colors">Joyfully Accept</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer group">
+                                    <div className={`w-4 h-4 rounded-full border border-[#8c7b66] flex items-center justify-center transition-colors ${!attending ? 'bg-[#2d1b0e] border-[#2d1b0e]' : 'bg-transparent'}`}>
+                                        {!attending && <div className="w-1.5 h-1.5 bg-[#fdfbf7] rounded-full" />}
+                                    </div>
+                                    <input type="radio" name="attending" className="sr-only" checked={!attending} onChange={() => setAttending(false)} />
+                                    <span className="font-serif text-sm text-[#2d1b0e] group-hover:text-[#5c4033] transition-colors">Regretfully Decline</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* Guest Count — only show if attending */}
+                        {attending && (
+                            <div className="space-y-1">
+                                <label className="block font-sans text-[10px] uppercase tracking-wider text-[#5c4033]">Number of Guests (including yourself)</label>
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setGuestCount(Math.max(1, guestCount - 1))}
+                                        className="w-8 h-8 rounded-full border border-[#d4b483] text-[#2d1b0e] font-bold text-lg flex items-center justify-center hover:bg-[#2d1b0e] hover:text-[#fdfbf7] transition-colors"
+                                        disabled={status === 'loading'}
+                                    >−</button>
+                                    <span className="font-serif text-2xl text-[#2d1b0e] w-8 text-center">{guestCount}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setGuestCount(Math.min(10, guestCount + 1))}
+                                        className="w-8 h-8 rounded-full border border-[#d4b483] text-[#2d1b0e] font-bold text-lg flex items-center justify-center hover:bg-[#2d1b0e] hover:text-[#fdfbf7] transition-colors"
+                                        disabled={status === 'loading'}
+                                    >+</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Message / Dietary Requirements */}
+                        <div className="space-y-1">
+                            <label className="block font-sans text-[10px] uppercase tracking-wider text-[#5c4033]">Message or Dietary Requirements</label>
+                            <textarea
+                                value={message}
+                                onChange={(e) => setMessage(e.target.value)}
+                                rows={2}
+                                className="w-full bg-transparent border border-[#d4b483] rounded p-2 focus:outline-none focus:border-[#d4af37] font-serif text-sm text-[#2d1b0e] placeholder-[#2d1b0e]/30 resize-none"
+                                placeholder="Any allergies, song requests, or a note for the couple..."
+                                disabled={status === 'loading'}
+                            />
+                        </div>
+
+                        {status === 'error' && (
+                            <p className="text-red-600 text-sm font-sans text-center">{errorMsg}</p>
+                        )}
+
+                        <div className="pt-2">
+                            <button
+                                type="submit"
+                                disabled={status === 'loading'}
+                                className="w-full bg-[#2d1b0e] text-[#fdfbf7] py-4 font-sans font-bold uppercase tracking-widest hover:bg-[#4a3b2a] transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {status === 'loading' ? 'Sending...' : 'Confirm Attendance'}
+                            </button>
+                            <p className="text-center mt-4 font-serif italic text-sm text-[#8c7b66]">{confirmationMessage}</p>
+                        </div>
+                    </form>
+                )}
+
+                <button onClick={onClose} className="absolute top-4 right-4 text-[#8c7b66] hover:text-[#2d1b0e]">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                </button>
+            </motion.div>
         </motion.div>
-    </motion.div>
-);
+    );
+};

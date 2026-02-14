@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePathname } from 'next/navigation';
 
 // Pages where we DON'T want the nav bar
-const HIDDEN_NAV_PATHS = ['/demo/'];
+const HIDDEN_NAV_PATHS = ['/demo/', '/s/'];
 
 export const NavBar = () => {
     const { user, loading } = useAuth();

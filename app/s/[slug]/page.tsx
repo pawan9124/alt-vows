@@ -97,14 +97,14 @@ export default function ProductionSitePage({ params }: Props) {
                 {!isInviteOpen ? (
                     <motion.div key="gatekeeper-wrapper" className="absolute inset-0 z-20">
                         <Gatekeeper
-                            config={{ ...currentConfig, ...pages.gatekeeper }}
+                            config={{ ...currentConfig, ...pages.gatekeeper, weddingId: slug }}
                             onOpen={() => setIsInviteOpen(true)}
                         />
                     </motion.div>
                 ) : (
                     <motion.div key="player-wrapper" className="absolute inset-0 z-30">
                         <Player
-                            config={{ ...currentConfig, ...pages.player }}
+                            config={{ ...currentConfig, ...pages.player, weddingId: slug }}
                             onClose={() => setIsInviteOpen(false)}
                         />
                     </motion.div>

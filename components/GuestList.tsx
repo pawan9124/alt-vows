@@ -53,7 +53,7 @@ export const GuestList: React.FC<GuestListProps> = ({ weddingId }) => {
   }, [weddingId]);
 
   // Calculate totals
-  const totalGuests = guests.length;
+  const totalResponses = guests.length;
   const attendingCount = guests.filter((g) => g.attending).length;
   const notAttendingCount = guests.filter((g) => !g.attending).length;
   const totalPartySize = guests
@@ -63,7 +63,7 @@ export const GuestList: React.FC<GuestListProps> = ({ weddingId }) => {
   if (loading) {
     return (
       <div className="p-6 text-center">
-        <p className="font-serif text-cream text-lg animate-pulse">Loading guests...</p>
+        <p className="text-white/60 text-lg animate-pulse">Loading guests...</p>
       </div>
     );
   }
@@ -71,7 +71,7 @@ export const GuestList: React.FC<GuestListProps> = ({ weddingId }) => {
   if (error) {
     return (
       <div className="p-6 text-center">
-        <p className="font-serif text-red-400 text-lg">Error: {error}</p>
+        <p className="text-red-400 text-lg">Error: {error}</p>
       </div>
     );
   }
@@ -80,10 +80,10 @@ export const GuestList: React.FC<GuestListProps> = ({ weddingId }) => {
     <div className="p-6 space-y-6">
       {/* Summary Section */}
       <div className="bg-gray-800/50 p-6 rounded-lg border border-gray-700">
-        <h3 className="font-serif text-2xl text-cream mb-4">RSVP Summary</h3>
+        <h3 className="text-xl font-semibold text-white mb-4">RSVP Summary</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center">
-            <div className="text-3xl font-bold text-cream">{totalGuests}</div>
+            <div className="text-3xl font-bold text-white">{totalResponses}</div>
             <div className="text-sm text-gray-400 uppercase tracking-wider mt-1">
               Total Responses
             </div>
@@ -101,7 +101,7 @@ export const GuestList: React.FC<GuestListProps> = ({ weddingId }) => {
             </div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-gold">{totalPartySize}</div>
+            <div className="text-3xl font-bold text-yellow-400">{totalPartySize}</div>
             <div className="text-sm text-gray-400 uppercase tracking-wider mt-1">
               Total Guests
             </div>
@@ -115,22 +115,19 @@ export const GuestList: React.FC<GuestListProps> = ({ weddingId }) => {
           <table className="w-full">
             <thead className="bg-gray-900/50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gold font-serif">
+                <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-yellow-500">
                   Name
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gold font-serif">
-                  Email
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-gold font-serif">
+                <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-yellow-500">
                   Status
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-gold font-serif">
+                <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-yellow-500">
                   Party Size
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gold font-serif">
-                  Message
+                <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-yellow-500">
+                  Message / Dietary
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gold font-serif">
+                <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-yellow-500">
                   Date
                 </th>
               </tr>
@@ -138,35 +135,38 @@ export const GuestList: React.FC<GuestListProps> = ({ weddingId }) => {
             <tbody className="divide-y divide-gray-700">
               {guests.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-400 font-serif">
-                    No RSVPs yet
+                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                    No RSVPs yet. Share your site link to start collecting responses!
                   </td>
                 </tr>
               ) : (
                 guests.map((guest) => (
                   <tr key={guest.id} className="hover:bg-gray-800/30 transition-colors">
-                    <td className="px-4 py-3 text-cream font-serif">{guest.name}</td>
-                    <td className="px-4 py-3 text-gray-400 text-sm">
-                      {guest.email || '—'}
+                    <td className="px-4 py-3 text-white font-medium">
+                      {guest.name || '(no name)'}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span
                         className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${guest.attending
-                            ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                            : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                          ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                          : 'bg-red-500/20 text-red-400 border border-red-500/30'
                           }`}
                       >
-                        {guest.attending ? 'Yes' : 'No'}
+                        {guest.attending ? 'Attending' : 'Declined'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center text-cream font-serif">
-                      {guest.attending ? 1 + guest.plus_ones : 0}
+                    <td className="px-4 py-3 text-center text-white">
+                      {guest.attending ? 1 + guest.plus_ones : '—'}
                     </td>
-                    <td className="px-4 py-3 text-gray-400 text-sm max-w-xs truncate">
+                    <td className="px-4 py-3 text-gray-300 text-sm max-w-xs">
                       {guest.message || '—'}
                     </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">
-                      {new Date(guest.created_at).toLocaleDateString()}
+                    <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">
+                      {new Date(guest.created_at).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}
                     </td>
                   </tr>
                 ))
@@ -178,4 +178,3 @@ export const GuestList: React.FC<GuestListProps> = ({ weddingId }) => {
     </div>
   );
 };
-

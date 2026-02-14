@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 
-export default function AuthPage() {
+function AuthContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { user } = useAuth();
+    const redirectUrl = searchParams.get('redirect') || '/dashboard';
 
     const [mode, setMode] = useState<'signin' | 'signup'>('signin');
     const [email, setEmail] = useState('');
@@ -18,7 +20,7 @@ export default function AuthPage() {
 
     // If already logged in, redirect
     if (user) {
-        router.push('/dashboard');
+        router.push(redirectUrl);
         return null;
     }
 
@@ -42,7 +44,7 @@ export default function AuthPage() {
                     password,
                 });
                 if (error) throw error;
-                router.push('/dashboard');
+                router.push(redirectUrl);
             }
         } catch (err: any) {
             setError(err.message || 'An unexpected error occurred');
@@ -153,5 +155,17 @@ export default function AuthPage() {
                 </p>
             </div>
         </main>
+    );
+}
+
+export default function AuthPage() {
+    return (
+        <Suspense fallback={
+            <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+                <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+            </main>
+        }>
+            <AuthContent />
+        </Suspense>
     );
 }
