@@ -1,22 +1,46 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Playfair_Display, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/hooks/useAuth";
 import { NavBar } from "@/components/NavBar";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
+});
+
+const jetbrains = JetBrains_Mono({
+  variable: "--font-jetbrains",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Alt Vows — Not Your Grandma's Wedding Website",
-  description: "Animated, interactive wedding sites for couples who break the mold.",
+  title: "Alt Vows — Invitations That Move",
+  description:
+    "Stunning, animated invitation sites your guests will never forget. Pick a theme, customize in minutes, share a link. One-time $49 — no subscriptions.",
+  keywords: ["invitation", "wedding website", "animated invitation", "RSVP", "wedding", "events"],
+  openGraph: {
+    title: "Alt Vows — Invitations That Move",
+    description:
+      "Stunning, animated invitation sites your guests will never forget. Pick a theme, customize in minutes, share a link.",
+    url: "https://altvows.com",
+    siteName: "Alt Vows",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Alt Vows — Invitations That Move",
+    description:
+      "Stunning, animated invitation sites your guests will never forget. One-time $49.",
+  },
 };
 
 export default function RootLayout({
@@ -25,9 +49,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark scroll-smooth">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${playfair.variable} ${inter.variable} ${jetbrains.variable} antialiased`}
       >
         <AuthProvider>
           <NavBar />
@@ -37,4 +61,3 @@ export default function RootLayout({
     </html>
   );
 }
-

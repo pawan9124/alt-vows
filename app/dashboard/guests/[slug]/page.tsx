@@ -39,7 +39,6 @@ export default function GuestListPage({ params }: Props) {
                 .maybeSingle();
 
             if (error || !data) {
-                // Not owner or site not found
                 router.push('/dashboard');
                 return;
             }
@@ -54,8 +53,8 @@ export default function GuestListPage({ params }: Props) {
 
     if (authLoading || !user || loading) {
         return (
-            <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+            <main className="min-h-screen bg-[var(--bg-deep)] flex items-center justify-center">
+                <div className="w-8 h-8 border-2 border-[var(--border-subtle)] border-t-[var(--gold)] rounded-full animate-spin" />
             </main>
         );
     }
@@ -63,20 +62,23 @@ export default function GuestListPage({ params }: Props) {
     if (!isOwner) return null;
 
     return (
-        <main className="min-h-screen bg-[#0a0a0a] pt-20 px-4 pb-16">
+        <main className="min-h-screen bg-[var(--bg-deep)] pt-20 px-4 pb-16">
             <div className="max-w-5xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
                     <Link
                         href="/dashboard"
-                        className="text-white/40 hover:text-white text-sm mb-4 inline-flex items-center gap-1.5 transition-colors"
+                        className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] text-sm mb-4 inline-flex items-center gap-1.5 transition-colors"
                     >
                         <ArrowLeft className="w-3.5 h-3.5" /> Back to Dashboard
                     </Link>
-                    <h1 className="text-3xl font-bold text-white tracking-tight">
+                    <h1
+                        className="text-3xl font-bold text-[var(--text-primary)] tracking-tight"
+                        style={{ fontFamily: 'var(--font-inter)' }}
+                    >
                         Guest RSVPs
                     </h1>
-                    <p className="text-white/40 text-sm mt-1">{siteName}</p>
+                    <p className="text-[var(--text-tertiary)] text-sm mt-1">{siteName}</p>
                 </div>
 
                 {/* Guest List Component */}

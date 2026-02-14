@@ -6,8 +6,8 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import { PublishButton } from '@/components/PublishButton';
-import { ConfettiSuccess } from '@/components/ConfettiSuccess';
-import { ExternalLink, Copy, Check, Users } from 'lucide-react';
+import { Copy, Check, Users, Plus } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface WebsiteRow {
     slug: string;
@@ -26,11 +26,23 @@ function DashboardContent() {
     const [sites, setSites] = useState<WebsiteRow[]>([]);
     const [loading, setLoading] = useState(true);
     const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
+    const [rsvpCounts, setRsvpCounts] = useState<Record<string, number>>({});
 
     // Payment success state
     const paymentSuccess = searchParams.get('payment') === 'success';
     const paymentSlug = searchParams.get('slug');
-    const [showConfetti, setShowConfetti] = useState(paymentSuccess);
+    const [showToast, setShowToast] = useState(paymentSuccess);
+
+    // Auto-dismiss toast
+    useEffect(() => {
+        if (showToast) {
+            const timer = setTimeout(() => {
+                setShowToast(false);
+                router.replace('/dashboard');
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [showToast, router]);
 
     // Redirect to auth if not logged in
     useEffect(() => {
@@ -54,6 +66,23 @@ function DashboardContent() {
                 console.error('Error fetching sites:', error.message);
             } else {
                 setSites(data || []);
+
+                // Fetch RSVP counts for live sites
+                const liveSlugs = (data || []).filter(s => s.status === 'production').map(s => s.slug);
+                if (liveSlugs.length > 0) {
+                    const { data: guests } = await supabase
+                        .from('guests')
+                        .select('wedding_id')
+                        .in('wedding_id', liveSlugs);
+
+                    if (guests) {
+                        const counts: Record<string, number> = {};
+                        guests.forEach(g => {
+                            counts[g.wedding_id] = (counts[g.wedding_id] || 0) + 1;
+                        });
+                        setRsvpCounts(counts);
+                    }
+                }
             }
             setLoading(false);
         }
@@ -66,12 +95,6 @@ function DashboardContent() {
         router.push('/');
     };
 
-    const handleDismissConfetti = () => {
-        setShowConfetti(false);
-        // Clean up URL params
-        router.replace('/dashboard');
-    };
-
     const handleCopyLink = (slug: string) => {
         const url = `${window.location.origin}/s/${slug}`;
         navigator.clipboard.writeText(url);
@@ -79,42 +102,63 @@ function DashboardContent() {
         setTimeout(() => setCopiedSlug(null), 2000);
     };
 
+    // Stats
+    const totalSites = sites.length;
+    const liveSites = sites.filter(s => s.status === 'production').length;
+    const totalRsvps = Object.values(rsvpCounts).reduce((a, b) => a + b, 0);
+
     // Show nothing while checking auth
     if (authLoading || !user) {
         return (
-            <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+            <main className="min-h-screen bg-[var(--bg-deep)] flex items-center justify-center">
+                <div className="w-8 h-8 border-2 border-[var(--border-subtle)] border-t-[var(--gold)] rounded-full animate-spin" />
             </main>
         );
     }
 
     return (
-        <main className="min-h-screen bg-[#0a0a0a] pt-20 px-4">
-            {/* Confetti celebration after payment */}
-            {showConfetti && paymentSlug && (
-                <ConfettiSuccess slug={paymentSlug} onDismiss={handleDismissConfetti} />
-            )}
+        <main className="min-h-screen bg-[var(--bg-deep)] pt-20 px-4 pb-16">
+            {/* Payment Success Toast */}
+            <AnimatePresence>
+                {showToast && paymentSlug && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-6 py-4 bg-emerald-900/90 border border-emerald-500/30 rounded-xl text-emerald-400 text-sm font-medium shadow-xl backdrop-blur-sm"
+                    >
+                        🎉 Your site is live! Share it with your guests.
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <div className="max-w-5xl mx-auto">
 
                 {/* Header */}
-                <div className="flex items-center justify-between mb-10">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-white tracking-tight">
-                            My Wedding Sites
+                        <h1
+                            className="text-3xl font-bold text-[var(--text-primary)] tracking-tight"
+                            style={{ fontFamily: 'var(--font-inter)' }}
+                        >
+                            My Sites
                         </h1>
-                        <p className="text-white/40 text-sm mt-1">{user.email}</p>
+                        <p className="text-[var(--text-tertiary)] text-sm mt-1">
+                            {totalSites} site{totalSites !== 1 ? 's' : ''}
+                            {liveSites > 0 && <> · {liveSites} live</>}
+                            {totalRsvps > 0 && <> · {totalRsvps} RSVP{totalRsvps !== 1 ? 's' : ''}</>}
+                        </p>
                     </div>
                     <div className="flex items-center gap-3">
                         <Link
                             href="/dashboard/create"
-                            className="px-5 py-2.5 bg-yellow-600 hover:bg-yellow-500 text-black font-bold text-sm rounded-lg transition-all uppercase tracking-wide"
+                            className="px-5 py-2.5 bg-[var(--gold)] hover:bg-[var(--gold-hover)] text-[var(--bg-deep)] font-bold text-sm rounded-xl transition-all uppercase tracking-wide"
                         >
                             + New Site
                         </Link>
                         <button
                             onClick={handleSignOut}
-                            className="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-sm rounded-lg transition-all border border-white/10"
+                            className="px-4 py-2.5 bg-[var(--bg-surface)] hover:bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-sm rounded-xl transition-all border border-[var(--border-subtle)]"
                         >
                             Sign Out
                         </button>
@@ -124,63 +168,107 @@ function DashboardContent() {
                 {/* Content */}
                 {loading ? (
                     <div className="flex justify-center py-20">
-                        <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                        <div className="w-8 h-8 border-2 border-[var(--border-subtle)] border-t-[var(--gold)] rounded-full animate-spin" />
                     </div>
                 ) : sites.length === 0 ? (
-                    /* Empty State */
-                    <div className="flex flex-col items-center justify-center py-28 text-center">
-                        <div className="text-6xl mb-6">💿</div>
-                        <h2 className="text-xl font-semibold text-white mb-2">
-                            You haven't created a wedding site yet
+                    /* ─── Empty State ─── */
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex flex-col items-center justify-center py-28 text-center"
+                    >
+                        <div className="w-20 h-20 rounded-3xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-center justify-center mb-6">
+                            <span className="text-4xl">✦</span>
+                        </div>
+                        <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
+                            Your love story starts here.
                         </h2>
-                        <p className="text-white/40 text-sm mb-8 max-w-md">
-                            Start building your unique, music-inspired wedding invitation
-                            that your guests will never forget.
+                        <p className="text-[var(--text-tertiary)] text-sm mb-8 max-w-md">
+                            Choose a theme, add your details, and create an invitation
+                            your guests will actually remember.
                         </p>
                         <Link
                             href="/dashboard/create"
-                            className="px-8 py-3 bg-yellow-600 hover:bg-yellow-500 text-black font-bold text-sm rounded-lg transition-all uppercase tracking-wide"
+                            className="px-8 py-3 bg-[var(--gold)] hover:bg-[var(--gold-hover)] text-[var(--bg-deep)] font-bold text-sm rounded-xl transition-all uppercase tracking-wide"
                         >
                             Create Your First Site
                         </Link>
-                    </div>
+                    </motion.div>
                 ) : (
-                    /* Site Cards Grid */
+                    /* ─── Site Cards Grid — original 3-column ─── */
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                        {sites.map((site) => {
+                        {sites.map((site, index) => {
                             const content = site.content || {};
                             const names = content.hero?.names || site.slug;
                             const title = content.hero?.title || '';
-                            const primary = content.theme?.global?.palette?.primary || '#666';
+                            const primary = content.theme?.global?.palette?.primary || 'var(--gold)';
                             const lastEdited = site.updated_at || site.created_at;
                             const isLive = site.status === 'production';
+                            const rsvpCount = rsvpCounts[site.slug] || 0;
 
                             return (
-                                <div
+                                <motion.div
                                     key={site.slug}
-                                    className="bg-[#111] border border-white/10 rounded-xl overflow-hidden hover:border-white/20 transition-all group"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.08, duration: 0.4, ease: 'easeOut' }}
+                                    className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden hover:border-[var(--border-active)] transition-all group"
                                 >
-                                    {/* Color Banner */}
+                                    {/* Color Banner — original style with SVG pattern overlay */}
                                     <div
-                                        className="h-24 relative overflow-hidden"
+                                        className="h-28 relative overflow-hidden"
                                         style={{
-                                            background: `linear-gradient(135deg, ${primary}40, ${primary}15)`,
+                                            background: `linear-gradient(135deg, ${primary}30, ${primary}08, var(--bg-deep))`,
                                         }}
                                     >
+                                        {/* Radial glow */}
                                         <div
-                                            className="absolute inset-0 opacity-30"
-                                            style={{
-                                                background: `radial-gradient(circle at 70% 30%, ${primary}, transparent 60%)`,
-                                            }}
+                                            className="absolute top-0 right-0 w-40 h-40 rounded-full blur-3xl opacity-40"
+                                            style={{ background: primary }}
                                         />
+
+                                        {/* SVG dot pattern */}
+                                        <svg className="absolute inset-0 w-full h-full opacity-[0.06]" xmlns="http://www.w3.org/2000/svg">
+                                            <defs>
+                                                <pattern id={`pat-${site.slug}`} x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+                                                    <circle cx="20" cy="20" r="1.5" fill="currentColor" />
+                                                    <circle cx="0" cy="0" r="1" fill="currentColor" />
+                                                    <circle cx="40" cy="0" r="1" fill="currentColor" />
+                                                    <circle cx="0" cy="40" r="1" fill="currentColor" />
+                                                    <circle cx="40" cy="40" r="1" fill="currentColor" />
+                                                </pattern>
+                                            </defs>
+                                            <rect width="100%" height="100%" fill={`url(#pat-${site.slug})`} style={{ color: primary }} />
+                                        </svg>
+
+                                        {/* Floating niche icon */}
+                                        <div className="absolute bottom-3 left-5 text-3xl opacity-20 group-hover:opacity-40 group-hover:scale-110 transition-all duration-500">
+                                            {content.nicheSlug?.includes('rock') ? '🤘'
+                                                : content.nicheSlug?.includes('jazz') ? '🎷'
+                                                    : content.nicheSlug?.includes('cyber') ? '⚡'
+                                                        : '✦'}
+                                        </div>
+
+                                        {/* Gradient accent line */}
+                                        <div
+                                            className="absolute -bottom-px left-0 right-0 h-px"
+                                            style={{ background: `linear-gradient(90deg, transparent, ${primary}50, transparent)` }}
+                                        />
+
                                         {/* Status Badge */}
                                         <div className="absolute top-3 right-3">
                                             {isLive ? (
-                                                <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                                <span
+                                                    className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 backdrop-blur-sm"
+                                                    style={{ fontFamily: 'var(--font-jetbrains)' }}
+                                                >
                                                     Live
                                                 </span>
                                             ) : (
-                                                <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
+                                                <span
+                                                    className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-[var(--gold)]/15 text-[var(--gold)] border border-[var(--gold)]/25 backdrop-blur-sm"
+                                                    style={{ fontFamily: 'var(--font-jetbrains)' }}
+                                                >
                                                     Demo
                                                 </span>
                                             )}
@@ -189,15 +277,18 @@ function DashboardContent() {
 
                                     {/* Card Body */}
                                     <div className="p-5">
-                                        <h3 className="text-white font-semibold text-lg mb-0.5">
+                                        <h3 className="text-[var(--text-primary)] font-semibold text-lg mb-0.5">
                                             {names}
                                         </h3>
                                         {title && (
-                                            <p className="text-white/30 text-xs mb-3 truncate">
+                                            <p className="text-[var(--text-tertiary)] text-xs mb-1 truncate">
                                                 {title}
                                             </p>
                                         )}
-                                        <div className="flex items-center gap-2 text-[11px] text-white/30 mb-5">
+                                        <div
+                                            className="flex items-center gap-2 text-[11px] text-[var(--text-tertiary)] mb-1"
+                                            style={{ fontFamily: 'var(--font-jetbrains)' }}
+                                        >
                                             <span className="capitalize">{site.theme_id?.replace(/-/g, ' ')}</span>
                                             <span>·</span>
                                             <span>
@@ -206,13 +297,22 @@ function DashboardContent() {
                                                     : 'Unknown'}
                                             </span>
                                         </div>
+                                        {/* RSVP count for live sites */}
+                                        {isLive && rsvpCount > 0 && (
+                                            <p
+                                                className="text-[11px] text-[var(--text-tertiary)] mb-1"
+                                                style={{ fontFamily: 'var(--font-jetbrains)' }}
+                                            >
+                                                {rsvpCount} RSVP{rsvpCount !== 1 ? 's' : ''}
+                                            </p>
+                                        )}
 
                                         {/* Actions */}
-                                        <div className="flex flex-col gap-2">
+                                        <div className="flex flex-col gap-2 mt-4">
                                             <div className="flex gap-2">
                                                 <Link
                                                     href={`/demo/${site.slug}`}
-                                                    className="flex-1 text-center px-3 py-2 bg-yellow-600 hover:bg-yellow-500 text-black font-bold text-xs rounded-lg transition-all uppercase tracking-wide"
+                                                    className="flex-1 text-center px-3 py-2 bg-[var(--gold)] hover:bg-[var(--gold-hover)] text-[var(--bg-deep)] font-bold text-xs rounded-lg transition-all uppercase tracking-wide"
                                                 >
                                                     Edit
                                                 </Link>
@@ -234,16 +334,36 @@ function DashboardContent() {
                                             {isLive && (
                                                 <Link
                                                     href={`/dashboard/guests/${site.slug}`}
-                                                    className="flex items-center justify-center gap-1.5 px-3 py-2 bg-white/5 hover:bg-white/10 text-white/50 hover:text-white text-xs font-semibold rounded-lg transition-all border border-white/10 uppercase tracking-wide"
+                                                    className="flex items-center justify-center gap-1.5 px-3 py-2 bg-[var(--bg-elevated)] hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-xs font-semibold rounded-lg transition-all border border-[var(--border-subtle)] uppercase tracking-wide"
                                                 >
                                                     <Users className="w-3.5 h-3.5" /> View RSVPs
                                                 </Link>
                                             )}
                                         </div>
                                     </div>
-                                </div>
+                                </motion.div>
                             );
                         })}
+
+                        {/* ─── "+ Create New Site" Card ─── */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: sites.length * 0.08, duration: 0.4, ease: 'easeOut' }}
+                        >
+                            <Link
+                                href="/dashboard/create"
+                                className="min-h-[200px] flex flex-col items-center justify-center border-2 border-dashed border-[var(--border-subtle)] rounded-2xl cursor-pointer transition-all duration-200 hover:border-[var(--gold)] hover:bg-[var(--gold)]/[0.03] group h-full"
+                            >
+                                <Plus className="w-10 h-10 text-[var(--gold)] mb-3 group-hover:scale-110 transition-transform" />
+                                <span className="text-base font-semibold text-[var(--text-primary)]">
+                                    Create a New Site
+                                </span>
+                                <span className="text-[13px] text-[var(--text-tertiary)] mt-1">
+                                    Choose a theme. Tell your story.
+                                </span>
+                            </Link>
+                        </motion.div>
                     </div>
                 )}
             </div>
@@ -254,8 +374,8 @@ function DashboardContent() {
 export default function DashboardPage() {
     return (
         <Suspense fallback={
-            <main className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-                <div className="text-white/60 text-sm">Loading dashboard...</div>
+            <main className="min-h-screen bg-[var(--bg-deep)] flex items-center justify-center">
+                <div className="w-8 h-8 border-2 border-[var(--border-subtle)] border-t-[var(--gold)] rounded-full animate-spin" />
             </main>
         }>
             <DashboardContent />

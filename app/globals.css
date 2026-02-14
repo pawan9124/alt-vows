@@ -1,26 +1,62 @@
 @import "tailwindcss";
 
+/* ─── Alt-Vows Design System ─── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Backgrounds */
+  --bg-deep: #08070A;
+  --bg-surface: #111015;
+  --bg-elevated: #1A181F;
+
+  /* Borders */
+  --border-subtle: #2A2630;
+  --border-active: #3D3548;
+
+  /* Gold palette */
+  --gold: #D4A843;
+  --gold-hover: #E4B853;
+  --gold-muted: #8A7A4A;
+  --gold-glow: rgba(212, 168, 67, 0.15);
+
+  /* Text */
+  --text-primary: #F0EBE0;
+  --text-secondary: #9A9198;
+  --text-tertiary: #6A6168;
+
+  /* Status */
+  --success: #4ADE80;
+  --demo-amber: #F59E0B;
+  --error: #EF4444;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-background: var(--bg-deep);
+  --color-foreground: var(--text-primary);
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-playfair);
+  --font-mono: var(--font-jetbrains);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth scrolling for anchor links */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Gold glow utility */
+.gold-glow {
+  box-shadow: 0 0 40px var(--gold-glow), 0 0 80px var(--gold-glow);
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(8, 7, 10, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }

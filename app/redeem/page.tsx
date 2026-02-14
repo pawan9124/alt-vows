@@ -61,7 +61,6 @@ function RedeemContent() {
         setCodeError(null);
 
         try {
-            // Pass auth token if available so API can check for prior redemption
             const headers: Record<string, string> = {};
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.access_token) {
@@ -77,7 +76,6 @@ function RedeemContent() {
                 return;
             }
 
-            // If this user already redeemed this code, skip straight to their site
             if (data.already_redeemed && data.existing_slug) {
                 setResultSlug(data.existing_slug);
                 setSuccess(true);
@@ -101,7 +99,6 @@ function RedeemContent() {
         e.preventDefault();
         if (!names.trim()) return;
 
-        // If not logged in, redirect to auth with return URL
         if (!user) {
             const returnUrl = `/redeem?code=${encodeURIComponent(code.trim())}`;
             router.push(`/auth?redirect=${encodeURIComponent(returnUrl)}`);
@@ -134,7 +131,6 @@ function RedeemContent() {
             const data = await res.json();
 
             if (!res.ok) {
-                // If user already redeemed this code, redirect to their existing site
                 if (res.status === 409 && data.existing_slug) {
                     setResultSlug(data.existing_slug);
                     setClaimError(null);
@@ -150,7 +146,6 @@ function RedeemContent() {
             setResultSlug(data.slug);
             setSuccess(true);
 
-            // Redirect to editor after a brief celebration
             setTimeout(() => {
                 router.push(`/demo/${data.slug}`);
             }, 3000);
@@ -179,21 +174,24 @@ function RedeemContent() {
     // Success screen
     if (success) {
         return (
-            <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
+            <main className="min-h-screen bg-[var(--bg-deep)] flex items-center justify-center px-4">
                 <div className="text-center">
                     <div className="relative inline-block mb-6">
                         <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center animate-pulse">
                             <CheckCircle className="w-10 h-10 text-emerald-400" />
                         </div>
-                        <Sparkles className="w-6 h-6 text-yellow-400 absolute -top-1 -right-1 animate-bounce" />
+                        <Sparkles className="w-6 h-6 text-[var(--gold)] absolute -top-1 -right-1 animate-bounce" />
                     </div>
-                    <h1 className="text-3xl font-bold text-white mb-2">
-                        You're All Set! 🎉
+                    <h1
+                        className="text-3xl font-bold text-[var(--text-primary)] mb-2"
+                        style={{ fontFamily: 'var(--font-playfair)' }}
+                    >
+                        You&apos;re All Set! 🎉
                     </h1>
-                    <p className="text-white/40 text-sm mb-2">
-                        Your site <span className="text-yellow-500 font-semibold">{resultSlug}</span> is live and ready to customize.
+                    <p className="text-[var(--text-tertiary)] text-sm mb-2">
+                        Your site <span className="text-[var(--gold)] font-semibold">{resultSlug}</span> is live and ready to customize.
                     </p>
-                    <p className="text-white/20 text-xs">
+                    <p className="text-[var(--text-tertiary)] text-xs opacity-50">
                         Redirecting to your editor...
                     </p>
                 </div>
@@ -202,45 +200,49 @@ function RedeemContent() {
     }
 
     return (
-        <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4 pt-14">
+        <main className="min-h-screen bg-[var(--bg-deep)] flex items-center justify-center px-4 pt-14">
             <div className="w-full max-w-md">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-yellow-600/10 border border-yellow-600/20 mb-4">
-                        <Gift className="w-7 h-7 text-yellow-500" />
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[var(--gold)]/10 border border-[var(--gold)]/20 mb-4">
+                        <Gift className="w-7 h-7 text-[var(--gold)]" />
                     </div>
-                    <h1 className="text-3xl font-bold text-white tracking-tight">
+                    <h1
+                        className="text-3xl font-bold text-[var(--text-primary)] tracking-tight"
+                        style={{ fontFamily: 'var(--font-playfair)' }}
+                    >
                         Redeem Your Code
                     </h1>
-                    <p className="text-white/40 text-sm mt-2">
+                    <p className="text-[var(--text-tertiary)] text-sm mt-2">
                         {phase === 'code'
                             ? 'Enter the code from your Etsy purchase'
-                            : 'Set up your wedding site'}
+                            : 'Set up your site'}
                     </p>
                 </div>
 
                 {/* Card */}
-                <div className="bg-[#111] border border-white/10 rounded-xl p-8 shadow-2xl">
+                <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-8 shadow-2xl">
 
                     {/* Phase 1: Code Entry */}
                     {phase === 'code' && (
                         <div>
                             {codeError && (
-                                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm flex items-start gap-2">
+                                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm flex items-start gap-2">
                                     <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                                     {codeError}
                                 </div>
                             )}
 
                             <div className="mb-5">
-                                <label className="block text-[10px] uppercase font-semibold text-white/40 mb-2 tracking-wider">
+                                <label className="block text-[10px] uppercase font-semibold text-[var(--text-tertiary)] mb-2 tracking-wider">
                                     Redemption Code
                                 </label>
                                 <input
                                     type="text"
                                     value={code}
                                     onChange={(e) => setCode(e.target.value)}
-                                    className="w-full bg-black border border-white/10 rounded-lg px-4 py-3 text-sm text-white placeholder-white/20 focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/20 outline-none transition-all font-mono tracking-wide"
+                                    className="w-full bg-[var(--bg-deep)] border border-[var(--border-subtle)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/30 outline-none transition-all tracking-wide"
+                                    style={{ fontFamily: 'var(--font-jetbrains)' }}
                                     placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                                     spellCheck={false}
                                     autoComplete="off"
@@ -250,7 +252,7 @@ function RedeemContent() {
                             <button
                                 onClick={() => handleValidateCode()}
                                 disabled={validating || !code.trim()}
-                                className="w-full py-3 bg-yellow-600 hover:bg-yellow-500 disabled:bg-zinc-800 disabled:text-zinc-500 text-black font-bold text-sm rounded-lg transition-all uppercase tracking-wide flex items-center justify-center gap-2"
+                                className="w-full py-3 bg-[var(--gold)] hover:bg-[var(--gold-hover)] disabled:bg-[var(--bg-elevated)] disabled:text-[var(--text-tertiary)] text-[var(--bg-deep)] font-bold text-sm rounded-xl transition-all uppercase tracking-wide flex items-center justify-center gap-2"
                             >
                                 {validating ? (
                                     <>
@@ -270,7 +272,7 @@ function RedeemContent() {
                             {/* Theme badge */}
                             {themeDisplay && (
                                 <div
-                                    className="mb-6 p-4 rounded-lg border flex items-center gap-3"
+                                    className="mb-6 p-4 rounded-xl border flex items-center gap-3"
                                     style={{
                                         backgroundColor: `${themeDisplay.color}08`,
                                         borderColor: `${themeDisplay.color}30`,
@@ -278,10 +280,10 @@ function RedeemContent() {
                                 >
                                     <span className="text-2xl">{themeDisplay.emoji}</span>
                                     <div>
-                                        <p className="text-white text-sm font-semibold">
+                                        <p className="text-[var(--text-primary)] text-sm font-semibold">
                                             {themeDisplay.label} Theme
                                         </p>
-                                        <p className="text-white/30 text-xs">
+                                        <p className="text-[var(--text-tertiary)] text-xs">
                                             Included with your purchase — ready to customize
                                         </p>
                                     </div>
@@ -293,21 +295,21 @@ function RedeemContent() {
                             )}
 
                             {claimError && (
-                                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm flex items-start gap-2">
+                                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm flex items-start gap-2">
                                     <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                                     {claimError}
                                 </div>
                             )}
 
                             {!user && (
-                                <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-400 text-sm">
-                                    You'll need to sign in or create an account to claim your site.
+                                <div className="mb-4 p-3 bg-[var(--gold)]/10 border border-[var(--gold)]/20 rounded-xl text-[var(--gold)] text-sm">
+                                    You&apos;ll need to sign in or create an account to claim your site.
                                 </div>
                             )}
 
                             <form onSubmit={handleClaim} className="space-y-5">
                                 <div>
-                                    <label className="block text-[10px] uppercase font-semibold text-white/40 mb-2 tracking-wider">
+                                    <label className="block text-[10px] uppercase font-semibold text-[var(--text-tertiary)] mb-2 tracking-wider">
                                         Your Names
                                     </label>
                                     <input
@@ -315,32 +317,32 @@ function RedeemContent() {
                                         value={names}
                                         onChange={(e) => setNames(e.target.value)}
                                         required
-                                        className="w-full bg-black border border-white/10 rounded-lg px-4 py-3 text-sm text-white placeholder-white/20 focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/20 outline-none transition-all"
+                                        className="w-full bg-[var(--bg-deep)] border border-[var(--border-subtle)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/30 outline-none transition-all"
                                         placeholder="Alex & Jordan"
                                     />
                                     {names && (
-                                        <p className="text-white/20 text-xs mt-2">
-                                            URL: /s/<span className="text-yellow-500/60">{generateSlug(names)}</span>
+                                        <p className="text-[var(--text-tertiary)] text-xs mt-2">
+                                            URL: /s/<span className="text-[var(--gold-muted)]">{generateSlug(names)}</span>
                                         </p>
                                     )}
                                 </div>
 
                                 <div>
-                                    <label className="block text-[10px] uppercase font-semibold text-white/40 mb-2 tracking-wider">
-                                        Wedding Date
+                                    <label className="block text-[10px] uppercase font-semibold text-[var(--text-tertiary)] mb-2 tracking-wider">
+                                        Event Date
                                     </label>
                                     <input
                                         type="date"
                                         value={date}
                                         onChange={(e) => setDate(e.target.value)}
-                                        className="w-full bg-black border border-white/10 rounded-lg px-4 py-3 text-sm text-white placeholder-white/20 focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/20 outline-none transition-all [color-scheme:dark]"
+                                        className="w-full bg-[var(--bg-deep)] border border-[var(--border-subtle)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/30 outline-none transition-all [color-scheme:dark]"
                                     />
                                 </div>
 
                                 <button
                                     type="submit"
                                     disabled={claiming || !names.trim()}
-                                    className="w-full py-3 bg-yellow-600 hover:bg-yellow-500 disabled:bg-zinc-800 disabled:text-zinc-500 text-black font-bold text-sm rounded-lg transition-all uppercase tracking-wide flex items-center justify-center gap-2"
+                                    className="w-full py-3 bg-[var(--gold)] hover:bg-[var(--gold-hover)] disabled:bg-[var(--bg-elevated)] disabled:text-[var(--text-tertiary)] text-[var(--bg-deep)] font-bold text-sm rounded-xl transition-all uppercase tracking-wide flex items-center justify-center gap-2"
                                 >
                                     {claiming ? (
                                         <>
@@ -365,7 +367,7 @@ function RedeemContent() {
                                     setThemeId(null);
                                     setNicheSlug(null);
                                 }}
-                                className="w-full mt-3 text-center text-white/30 hover:text-white/50 text-xs transition-colors"
+                                className="w-full mt-3 text-center text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] text-xs transition-colors"
                             >
                                 ← Use a different code
                             </button>
@@ -374,9 +376,9 @@ function RedeemContent() {
                 </div>
 
                 {/* Footer */}
-                <p className="text-center text-white/20 text-xs mt-6">
-                    Don't have a code?{' '}
-                    <a href="/" className="text-yellow-500/60 hover:text-yellow-500 transition-colors">
+                <p className="text-center text-[var(--text-tertiary)] text-xs mt-6 opacity-60">
+                    Don&apos;t have a code?{' '}
+                    <a href="/" className="text-[var(--gold-muted)] hover:text-[var(--gold)] transition-colors">
                         Create your site directly
                     </a>
                 </p>
@@ -388,8 +390,8 @@ function RedeemContent() {
 export default function RedeemPage() {
     return (
         <Suspense fallback={
-            <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+            <main className="min-h-screen bg-[var(--bg-deep)] flex items-center justify-center">
+                <div className="w-8 h-8 border-2 border-[var(--border-subtle)] border-t-[var(--gold)] rounded-full animate-spin" />
             </main>
         }>
             <RedeemContent />

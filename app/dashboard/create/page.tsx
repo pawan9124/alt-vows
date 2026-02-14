@@ -40,7 +40,7 @@ const THEME_VIBES = [
         id: 'the-voyager',
         label: 'The Voyager',
         emoji: '✈️',
-        description: 'Travel-inspired adventure wedding',
+        description: 'Travel-inspired adventure',
         color: '#f59e0b',
         nicheSlug: null,
         themeId: 'the-voyager',
@@ -75,7 +75,6 @@ export default function CreateSitePage() {
     };
 
     // Normalize "Moly and Goli" or "Moly & Goli" → "Moly & Goli"
-    // The Gatekeeper component splits on '&' to display each name separately
     const normalizeNames = (input: string): string => {
         const parts = input.split(/\s+(?:&|and)\s+/i);
         if (parts.length >= 2) {
@@ -114,7 +113,6 @@ export default function CreateSitePage() {
             let content: any;
 
             if (resolvedThemeId === 'the-voyager') {
-                // The Voyager uses its own config system
                 const formattedDate = date
                     ? new Date(date).toLocaleDateString('en-US', {
                         month: 'short',
@@ -134,7 +132,6 @@ export default function CreateSitePage() {
                     },
                 };
             } else {
-                // Vintage Vinyl — use mergeConfig with niche data
                 const nicheConfig = niches.find((n) => n.slug === vibe?.nicheSlug);
                 const baseContent = mergeConfig(nicheConfig || null);
 
@@ -179,27 +176,30 @@ export default function CreateSitePage() {
 
     if (authLoading || !user) {
         return (
-            <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+            <main className="min-h-screen bg-[var(--bg-deep)] flex items-center justify-center">
+                <div className="w-8 h-8 border-2 border-[var(--border-subtle)] border-t-[var(--gold)] rounded-full animate-spin" />
             </main>
         );
     }
 
     return (
-        <main className="min-h-screen bg-[#0a0a0a] pt-20 px-4 pb-16">
+        <main className="min-h-screen bg-[var(--bg-deep)] pt-20 px-4 pb-16">
             <div className="max-w-2xl mx-auto">
                 {/* Header */}
                 <div className="mb-10">
                     <button
                         onClick={() => router.push('/dashboard')}
-                        className="text-white/40 hover:text-white text-sm mb-4 inline-block transition-colors"
+                        className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] text-sm mb-4 inline-block transition-colors"
                     >
                         ← Back to Dashboard
                     </button>
-                    <h1 className="text-3xl font-bold text-white tracking-tight">
+                    <h1
+                        className="text-3xl font-bold text-[var(--text-primary)] tracking-tight"
+                        style={{ fontFamily: 'var(--font-inter)' }}
+                    >
                         Create Your Site
                     </h1>
-                    <p className="text-white/40 text-sm mt-1">
+                    <p className="text-[var(--text-tertiary)] text-sm mt-1">
                         Set up the basics. You can customize everything later.
                     </p>
                 </div>
@@ -207,7 +207,7 @@ export default function CreateSitePage() {
                 <form onSubmit={handleCreate} className="space-y-8">
                     {/* Names */}
                     <div>
-                        <label className="block text-[10px] uppercase font-semibold text-white/40 mb-2 tracking-wider">
+                        <label className="block text-[10px] uppercase font-semibold text-[var(--text-tertiary)] mb-2 tracking-wider">
                             Your Names
                         </label>
                         <input
@@ -215,50 +215,50 @@ export default function CreateSitePage() {
                             value={names}
                             onChange={(e) => setNames(e.target.value)}
                             required
-                            className="w-full bg-black border border-white/10 rounded-lg px-4 py-3 text-sm text-white placeholder-white/20 focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/20 outline-none transition-all"
+                            className="w-full bg-[var(--bg-deep)] border border-[var(--border-subtle)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/30 outline-none transition-all"
                             placeholder="Alex & Jordan"
                         />
                         {names && (
-                            <p className="text-white/20 text-xs mt-2">
-                                URL: /demo/<span className="text-yellow-500/60">{generateSlug(names)}</span>
+                            <p className="text-[var(--text-tertiary)] text-xs mt-2">
+                                URL: /demo/<span className="text-[var(--gold-muted)]">{generateSlug(names)}</span>
                             </p>
                         )}
                     </div>
 
                     {/* Date */}
                     <div>
-                        <label className="block text-[10px] uppercase font-semibold text-white/40 mb-2 tracking-wider">
-                            Wedding Date
+                        <label className="block text-[10px] uppercase font-semibold text-[var(--text-tertiary)] mb-2 tracking-wider">
+                            Event Date
                         </label>
                         <input
                             type="date"
                             value={date}
                             onChange={(e) => setDate(e.target.value)}
-                            className="w-full bg-black border border-white/10 rounded-lg px-4 py-3 text-sm text-white placeholder-white/20 focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/20 outline-none transition-all [color-scheme:dark]"
+                            className="w-full bg-[var(--bg-deep)] border border-[var(--border-subtle)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/30 outline-none transition-all [color-scheme:dark]"
                         />
                     </div>
 
                     {/* Vibe Selection */}
                     <div>
-                        <label className="block text-[10px] uppercase font-semibold text-white/40 mb-3 tracking-wider">
+                        <label className="block text-[10px] uppercase font-semibold text-[var(--text-tertiary)] mb-3 tracking-wider">
                             Choose Your Vibe
                         </label>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {THEME_VIBES.map((vibe) => (
                                 <button
                                     key={vibe.id}
                                     type="button"
                                     onClick={() => setSelectedVibe(vibe.id)}
                                     className={`relative p-5 rounded-xl border-2 text-left transition-all ${selectedVibe === vibe.id
-                                        ? 'border-yellow-500 bg-yellow-500/5'
-                                        : 'border-white/10 bg-[#111] hover:border-white/20'
+                                        ? 'border-[var(--gold)] bg-[var(--gold)]/5'
+                                        : 'border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[var(--border-active)]'
                                         }`}
                                 >
                                     <div className="text-3xl mb-2">{vibe.emoji}</div>
-                                    <h3 className="text-white font-semibold text-sm mb-1">
+                                    <h3 className="text-[var(--text-primary)] font-semibold text-sm mb-1">
                                         {vibe.label}
                                     </h3>
-                                    <p className="text-white/30 text-xs leading-relaxed">
+                                    <p className="text-[var(--text-tertiary)] text-xs leading-relaxed">
                                         {vibe.description}
                                     </p>
                                     {/* Color dot */}
@@ -268,8 +268,8 @@ export default function CreateSitePage() {
                                     />
                                     {/* Selected check */}
                                     {selectedVibe === vibe.id && (
-                                        <div className="absolute top-4 right-4 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center">
-                                            <span className="text-black text-xs font-bold">✓</span>
+                                        <div className="absolute top-4 right-4 w-5 h-5 bg-[var(--gold)] rounded-full flex items-center justify-center">
+                                            <span className="text-[var(--bg-deep)] text-xs font-bold">✓</span>
                                         </div>
                                     )}
                                 </button>
@@ -279,7 +279,7 @@ export default function CreateSitePage() {
 
                     {/* Error */}
                     {error && (
-                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
                             {error}
                         </div>
                     )}
@@ -288,7 +288,7 @@ export default function CreateSitePage() {
                     <button
                         type="submit"
                         disabled={creating || !names.trim()}
-                        className="w-full py-3.5 bg-yellow-600 hover:bg-yellow-500 disabled:bg-zinc-800 disabled:text-zinc-500 text-black font-bold text-sm rounded-lg transition-all uppercase tracking-wide"
+                        className="w-full py-3.5 bg-[var(--gold)] hover:bg-[var(--gold-hover)] disabled:bg-[var(--bg-elevated)] disabled:text-[var(--text-tertiary)] text-[var(--bg-deep)] font-bold text-sm rounded-xl transition-all uppercase tracking-wide"
                     >
                         {creating ? 'Creating…' : 'Create & Start Editing'}
                     </button>
