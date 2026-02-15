@@ -339,6 +339,12 @@ function DashboardContent() {
                                                         </Link>
                                                     </div>
                                                     <Link
+                                                        href={`/dashboard/create?theme=${niche.slug}`}
+                                                        className="w-full text-center px-3 py-2 bg-[var(--bg-surface)] hover:bg-[var(--gold)]/10 text-[var(--gold)] hover:text-[var(--gold)] font-bold text-xs rounded-lg transition-all border border-[var(--gold)]/30 uppercase tracking-wide"
+                                                    >
+                                                        ✨ Try Demo
+                                                    </Link>
+                                                    <Link
                                                         href="/redeem"
                                                         className="w-full text-center px-3 py-2 bg-[var(--gold)] hover:bg-[var(--gold-hover)] text-[var(--bg-deep)] font-bold text-xs rounded-lg transition-all uppercase tracking-wide"
                                                     >

@@ -30,9 +30,9 @@ export default function ThemePreviewPage() {
     const pages = (theme as any).pages || {};
 
     return (
-        <main className="relative min-h-screen bg-black overflow-hidden">
-            {/* Preview Banner */}
-            <div className="fixed top-0 left-0 right-0 z-[90] bg-gradient-to-r from-purple-600/90 via-indigo-500/90 to-purple-600/90 backdrop-blur-sm text-center py-2.5 px-4 flex items-center justify-center gap-3">
+        <div className="flex flex-col h-screen bg-black overflow-hidden">
+            {/* Preview Banner — separate header, NOT overlaid */}
+            <div className="flex-shrink-0 bg-gradient-to-r from-purple-600/90 via-indigo-500/90 to-purple-600/90 backdrop-blur-sm text-center py-2.5 px-4 flex items-center justify-center gap-3 z-[90]">
                 <p className="text-white text-xs font-bold uppercase tracking-wider">
                     👁️ Preview Mode — This is how your site will look
                 </p>
@@ -44,35 +44,38 @@ export default function ThemePreviewPage() {
                 </Link>
             </div>
 
-            <AnimatePresence mode="wait">
-                {!isInviteOpen ? (
-                    <motion.div key="gatekeeper-wrapper" className="absolute inset-0 z-20">
-                        <Gatekeeper
-                            config={{ ...config, ...pages.gatekeeper, weddingId: `preview/${slug}` }}
-                            onOpen={() => setIsInviteOpen(true)}
-                        />
-                    </motion.div>
-                ) : (
-                    <motion.div key="player-wrapper" className="absolute inset-0 z-30">
-                        <Player
-                            config={{ ...config, ...pages.player, weddingId: `preview/${slug}` }}
-                            onClose={() => setIsInviteOpen(false)}
-                            isDemo={true}
-                        />
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {/* Theme content — fills remaining height */}
+            <div className="flex-1 relative overflow-hidden">
+                <AnimatePresence mode="wait">
+                    {!isInviteOpen ? (
+                        <motion.div key="gatekeeper-wrapper" className="absolute inset-0 z-20">
+                            <Gatekeeper
+                                config={{ ...config, ...pages.gatekeeper, weddingId: `preview/${slug}`, isEditorOpen: true }}
+                                onOpen={() => setIsInviteOpen(true)}
+                            />
+                        </motion.div>
+                    ) : (
+                        <motion.div key="player-wrapper" className="absolute inset-0 z-30">
+                            <Player
+                                config={{ ...config, ...pages.player, weddingId: `preview/${slug}`, isEditorOpen: true }}
+                                onClose={() => setIsInviteOpen(false)}
+                                isDemo={true}
+                            />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
-            {/* Powered by Alt-Vows footer */}
-            <div className="fixed bottom-0 left-0 right-0 z-[80] text-center py-2.5 bg-black/40 backdrop-blur-sm border-t border-white/5">
-                <Link
-                    href="/"
-                    target="_blank"
-                    className="text-white/25 hover:text-white/50 text-[10px] font-medium uppercase tracking-[0.15em] transition-colors"
-                >
-                    Made with Alt-Vows ⚡
-                </Link>
+                {/* Powered by Alt-Vows footer */}
+                <div className="absolute bottom-0 left-0 right-0 z-[80] text-center py-2.5 bg-black/40 backdrop-blur-sm border-t border-white/5">
+                    <Link
+                        href="/"
+                        target="_blank"
+                        className="text-white/25 hover:text-white/50 text-[10px] font-medium uppercase tracking-[0.15em] transition-colors"
+                    >
+                        Made with Alt-Vows ⚡
+                    </Link>
+                </div>
             </div>
-        </main>
+        </div>
     );
 }
