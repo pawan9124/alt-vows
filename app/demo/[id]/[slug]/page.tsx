@@ -124,8 +124,8 @@ export default function DemoPage({ params }: Props) {
     const pages = theme.pages || currentConfig.pages || {};
 
     const isDemo = siteStatus !== 'production';
-    // Show editor only for logged-in owner
-    const showEditor = isOwner && isDemo;
+    // Show editor for logged-in owner (both demo and production)
+    const showEditor = isOwner;
 
     return (
         <main className="relative min-h-screen bg-black overflow-hidden">

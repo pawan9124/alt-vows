@@ -226,12 +226,13 @@ function DashboardContent() {
                         {(niches as any[]).map((niche, index) => {
                             const primary = niche.theme?.global?.palette?.primary || 'var(--gold)';
                             const bgImage = niche.theme?.pages?.landing?.backgroundValue || niche.theme?.pages?.gatekeeper?.backgroundTexture;
-                            // Match ownership: check nicheSlug first, then fallback to primary color match
+                            // Match ownership: only production sites count as "Purchased"
                             const ownedSite = sites.find(s => {
+                                if (s.status !== 'production') return false;
                                 // Direct nicheSlug match (new sites)
                                 if (s.content?.nicheSlug === niche.slug) return true;
                                 // Fallback: same theme_id + same primary color (for sites created before nicheSlug was stored)
-                                if (s.theme_id === niche.archetypeId && s.status === 'production') {
+                                if (s.theme_id === niche.archetypeId) {
                                     const sitePrimary = s.content?.theme?.global?.palette?.primary;
                                     if (sitePrimary && sitePrimary === primary) return true;
                                 }

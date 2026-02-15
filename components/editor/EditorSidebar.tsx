@@ -56,18 +56,25 @@ export const EditorSidebar = ({ siteStatus = 'demo' }: EditorSidebarProps) => {
 
         setIsSaving(true);
         try {
-            // 1. We use the 'slug' (URL) as the unique ID
+            // 1. Extract site_id from the URL: /demo/{siteId}/{slug}
+            const pathParts = window.location.pathname.split('/');
+            const siteId = pathParts[2] || null; // /demo/{siteId}/{slug}
             const slug = activeTheme.slug;
 
-            // 2. Write to Supabase (include owner_id for RLS)
+            if (!siteId) {
+                throw new Error('Cannot determine site ID from URL. Please reload and try again.');
+            }
+
+            // 2. Write to Supabase (include site_id + owner_id for RLS)
             const { error } = await supabase
                 .from('websites')
                 .upsert({
+                    site_id: siteId,
                     slug: slug,
                     theme_id: themeId,
                     content: activeTheme,
                     owner_id: user.id
-                });
+                }, { onConflict: 'site_id' });
 
             if (error) throw error;
 
