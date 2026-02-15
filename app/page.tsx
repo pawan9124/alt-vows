@@ -421,7 +421,7 @@ export default function HomePage() {
               className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start"
             >
               <Link
-                href="/demo/rock-n-roll-wedding"
+                href="/themes/rock-n-roll-wedding"
                 className="px-7 py-3.5 text-sm font-semibold text-[var(--text-primary)] bg-[var(--bg-surface)] hover:bg-[var(--bg-elevated)] border border-[var(--border-subtle)] hover:border-[var(--border-active)] rounded-xl transition-all tracking-wide"
               >
                 See It In Action →
@@ -546,7 +546,7 @@ export default function HomePage() {
                 transition={{ delay: i * 0.15 }}
               >
                 <Link
-                  href={`/demo/${theme.slug}`}
+                  href={`/themes/${theme.slug}`}
                   className="group block bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden hover:border-[var(--gold)]/50 transition-all duration-300 hover:-translate-y-1"
                   style={{
                     boxShadow: 'none',
@@ -937,7 +937,7 @@ export default function HomePage() {
                 <a href="#pricing" className="block text-[var(--text-tertiary)] text-sm hover:text-[var(--text-primary)] transition-colors">
                   Pricing
                 </a>
-                <Link href="/demo/rock-n-roll-wedding" className="block text-[var(--text-tertiary)] text-sm hover:text-[var(--text-primary)] transition-colors">
+                <Link href="/themes/rock-n-roll-wedding" className="block text-[var(--text-tertiary)] text-sm hover:text-[var(--text-primary)] transition-colors">
                   Live Demo
                 </Link>
               </div>
@@ -951,7 +951,7 @@ export default function HomePage() {
                 {THEMES.map((t) => (
                   <Link
                     key={t.slug}
-                    href={`/demo/${t.slug}`}
+                    href={`/themes/${t.slug}`}
                     className="block text-[var(--text-tertiary)] text-sm hover:text-[var(--text-primary)] transition-colors"
                   >
                     {t.name}

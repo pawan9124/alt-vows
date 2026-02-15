@@ -8,9 +8,10 @@ interface PlayerProps {
     config: any;
     onClose?: () => void;
     defaultIsPlaying?: boolean;
+    isDemo?: boolean;
 }
 
-export const Player: React.FC<PlayerProps> = ({ config, onClose, defaultIsPlaying = true }) => {
+export const Player: React.FC<PlayerProps> = ({ config, onClose, defaultIsPlaying = true, isDemo = false }) => {
     const content = config; // Alias
     const [isPlaying, setIsPlaying] = useState(defaultIsPlaying);
     const [isRSVPOpen, setIsRSVPOpen] = useState(false);
@@ -208,8 +209,8 @@ export const Player: React.FC<PlayerProps> = ({ config, onClose, defaultIsPlayin
                                         >
                                             <div
                                                 className={`transition-all duration-300 relative ${config.theme.pages.player.photoFrameStyle === 'minimal' ? 'bg-transparent' :
-                                                        config.theme.pages.player.photoFrameStyle === 'gold' ? 'bg-transparent' :
-                                                            'bg-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] group-hover:shadow-2xl'
+                                                    config.theme.pages.player.photoFrameStyle === 'gold' ? 'bg-transparent' :
+                                                        'bg-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] group-hover:shadow-2xl'
                                                     } ${config.theme.pages.player.photoFrameStyle !== 'gold' ? 'p-3' : ''}`}
                                                 style={{
                                                     border: config.theme.pages.player.photoFrameStyle === 'gold' ? `4px solid ${config.theme.pages.player.glowColor || '#d4af37'}` : 'none',
@@ -287,7 +288,7 @@ export const Player: React.FC<PlayerProps> = ({ config, onClose, defaultIsPlayin
             <svg width="0" height="0"><GoldGradientDef /></svg>
 
             <AnimatePresence>
-                {isRSVPOpen && <RSVPModal onClose={() => setIsRSVPOpen(false)} key="rsvp-modal" confirmationMessage={content.rsvp.confirmationMessage} deadline={content.rsvp.deadline} weddingId={config.weddingId} />}
+                {isRSVPOpen && <RSVPModal onClose={() => setIsRSVPOpen(false)} key="rsvp-modal" confirmationMessage={content.rsvp.confirmationMessage} deadline={content.rsvp.deadline} weddingId={config.weddingId} isDemo={isDemo} />}
             </AnimatePresence>
 
             <motion.div
@@ -410,10 +411,15 @@ export const Player: React.FC<PlayerProps> = ({ config, onClose, defaultIsPlayin
                                 </button>
                             </div>
                             {/* Replaced old RSVP button with Ticket Component */}
-                            <div className="flex flex-col gap-2 items-center pb-1 -ml-2 transform scale-90 origin-bottom-left md:scale-100">
+                            <div className="flex flex-col gap-2 items-center pb-1 -ml-2 transform scale-90 origin-bottom-left md:scale-100 relative">
+                                {isDemo && (
+                                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-0.5 bg-black/80 rounded text-[9px] text-yellow-400 font-bold uppercase tracking-wider border border-yellow-500/30 z-10">
+                                        🔒 Publish to unlock
+                                    </div>
+                                )}
                                 <RSVPTicket
                                     onClick={() => setIsRSVPOpen(true)}
-                                    label={content.rsvp.ticketTitle}
+                                    label={isDemo ? '🔒 RSVP Preview' : content.rsvp.ticketTitle}
                                     imageSrc={config.theme.pages.player.rsvpButtonAsset}
                                 />
                             </div>

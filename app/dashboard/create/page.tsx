@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import { mergeConfig } from '@/components/themes/vintage-vinyl/config';
 import { theVoyagerConfig } from '@/components/themes/the-voyager/config';
 import niches from '@/data/niches.json';
+import { generateSiteId, generateSlug, normalizeNames } from '@/lib/generateSiteId';
 
 const THEME_VIBES = [
     {
@@ -48,7 +49,16 @@ const THEME_VIBES = [
 ];
 
 export default function CreateSitePage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-[var(--bg-deep)] flex items-center justify-center"><div className="w-8 h-8 border-2 border-[var(--border-subtle)] border-t-[var(--gold)] rounded-full animate-spin" /></div>}>
+            <CreateSiteContent />
+        </Suspense>
+    );
+}
+
+function CreateSiteContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { user, loading: authLoading } = useAuth();
 
     const [names, setNames] = useState('');
@@ -56,6 +66,64 @@ export default function CreateSitePage() {
     const [selectedVibe, setSelectedVibe] = useState('rock-n-roll');
     const [creating, setCreating] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [ownedThemes, setOwnedThemes] = useState<string[]>([]);
+    const [loadingOwned, setLoadingOwned] = useState(true);
+
+    const themeParam = searchParams.get('theme');
+
+    // Fetch owned themes on load
+    useEffect(() => {
+        if (!user) return;
+
+        const fetchOwned = async () => {
+            const { data, error } = await supabase
+                .from('websites')
+                .select('content, theme_id, status')
+                .eq('owner_id', user.id)
+                .eq('status', 'production');
+
+            if (data) {
+                // Extract nicheSlugs only — themeId alone is too broad (multiple niches share same themeId)
+                const themes: string[] = [];
+                data.forEach(site => {
+                    const nicheSlug = site.content?.nicheSlug;
+                    if (nicheSlug) {
+                        themes.push(nicheSlug);
+                    } else {
+                        // Fallback for older sites without nicheSlug: match by primary color
+                        const sitePrimary = site.content?.theme?.global?.palette?.primary;
+                        if (sitePrimary) {
+                            const matchedNiche = (niches as any[]).find(n =>
+                                n.archetypeId === site.theme_id &&
+                                n.theme?.global?.palette?.primary === sitePrimary
+                            );
+                            if (matchedNiche) themes.push(matchedNiche.slug);
+                        }
+                    }
+                });
+                setOwnedThemes(themes);
+            }
+            setLoadingOwned(false);
+        };
+        fetchOwned();
+    }, [user]);
+
+    // Handle theme param pre-selection
+    useEffect(() => {
+        if (themeParam) {
+            const vibe = THEME_VIBES.find(v => v.nicheSlug === themeParam);
+            if (vibe) setSelectedVibe(vibe.id);
+        }
+    }, [themeParam]);
+
+    // Show all themes; if entered via "Try Demo" (themeParam present), show only THAT theme
+    const availableVibes = themeParam
+        ? THEME_VIBES.filter(vibe => vibe.nicheSlug === themeParam)
+        : THEME_VIBES;
+
+    // Check if a vibe is purchased — match by nicheSlug only
+    const isOwned = (vibe: typeof THEME_VIBES[number]) =>
+        ownedThemes.includes(vibe.nicheSlug || '');
 
     // Redirect if not logged in
     useEffect(() => {
@@ -64,24 +132,7 @@ export default function CreateSitePage() {
         }
     }, [user, authLoading, router]);
 
-    const generateSlug = (input: string): string => {
-        return input
-            .toLowerCase()
-            .replace(/&/g, 'and')
-            .replace(/[^a-z0-9\s-]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/-+/g, '-')
-            .trim();
-    };
-
-    // Normalize "Moly and Goli" or "Moly & Goli" → "Moly & Goli"
-    const normalizeNames = (input: string): string => {
-        const parts = input.split(/\s+(?:&|and)\s+/i);
-        if (parts.length >= 2) {
-            return `${parts[0].trim()} & ${parts[1].trim()}`;
-        }
-        return input.trim();
-    };
+    // generateSlug, normalizeNames, and generateSiteId are imported from shared lib
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -92,19 +143,7 @@ export default function CreateSitePage() {
 
         try {
             const slug = generateSlug(names);
-
-            // Check if slug already exists
-            const { data: existing } = await supabase
-                .from('websites')
-                .select('slug')
-                .eq('slug', slug)
-                .maybeSingle();
-
-            if (existing) {
-                setError(`A site with the URL "${slug}" already exists. Try different names.`);
-                setCreating(false);
-                return;
-            }
+            const siteId = generateSiteId();
 
             // 1. Find the selected vibe and its niche config from niches.json
             const vibe = THEME_VIBES.find((v) => v.id === selectedVibe);
@@ -124,7 +163,9 @@ export default function CreateSitePage() {
                 content = {
                     ...theVoyagerConfig.defaultContent,
                     slug,
+                    siteId,
                     themeId: 'the-voyager',
+                    nicheSlug: null,
                     hero: {
                         ...theVoyagerConfig.defaultContent.hero,
                         names: normalizeNames(names),
@@ -146,7 +187,9 @@ export default function CreateSitePage() {
                 content = {
                     ...baseContent,
                     slug,
+                    siteId,
                     themeId: resolvedThemeId,
+                    nicheSlug: vibe?.nicheSlug || null,
                     hero: {
                         ...baseContent.hero,
                         names: normalizeNames(names),
@@ -158,6 +201,7 @@ export default function CreateSitePage() {
             // Insert into Supabase
             const { error: insertError } = await supabase.from('websites').insert({
                 slug,
+                site_id: siteId,
                 theme_id: resolvedThemeId,
                 owner_id: user.id,
                 content,
@@ -166,7 +210,7 @@ export default function CreateSitePage() {
             if (insertError) throw insertError;
 
             // Redirect to the editor
-            router.push(`/demo/${slug}`);
+            router.push(`/demo/${siteId}/${slug}`);
         } catch (err: any) {
             console.error('Error creating site:', err);
             setError(err.message || 'Failed to create site');
@@ -220,7 +264,7 @@ export default function CreateSitePage() {
                         />
                         {names && (
                             <p className="text-[var(--text-tertiary)] text-xs mt-2">
-                                URL: /demo/<span className="text-[var(--gold-muted)]">{generateSlug(names)}</span>
+                                URL: /demo/xxxx/<span className="text-[var(--gold-muted)]">{generateSlug(names)}</span>
                             </p>
                         )}
                     </div>
@@ -243,37 +287,48 @@ export default function CreateSitePage() {
                         <label className="block text-[10px] uppercase font-semibold text-[var(--text-tertiary)] mb-3 tracking-wider">
                             Choose Your Vibe
                         </label>
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {THEME_VIBES.map((vibe) => (
-                                <button
-                                    key={vibe.id}
-                                    type="button"
-                                    onClick={() => setSelectedVibe(vibe.id)}
-                                    className={`relative p-5 rounded-xl border-2 text-left transition-all ${selectedVibe === vibe.id
-                                        ? 'border-[var(--gold)] bg-[var(--gold)]/5'
-                                        : 'border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[var(--border-active)]'
-                                        }`}
-                                >
-                                    <div className="text-3xl mb-2">{vibe.emoji}</div>
-                                    <h3 className="text-[var(--text-primary)] font-semibold text-sm mb-1">
-                                        {vibe.label}
-                                    </h3>
-                                    <p className="text-[var(--text-tertiary)] text-xs leading-relaxed">
-                                        {vibe.description}
-                                    </p>
-                                    {/* Color dot */}
-                                    <div
-                                        className="absolute top-4 right-4 w-3 h-3 rounded-full"
-                                        style={{ backgroundColor: vibe.color }}
-                                    />
-                                    {/* Selected check */}
-                                    {selectedVibe === vibe.id && (
-                                        <div className="absolute top-4 right-4 w-5 h-5 bg-[var(--gold)] rounded-full flex items-center justify-center">
-                                            <span className="text-[var(--bg-deep)] text-xs font-bold">✓</span>
+                            {availableVibes.map((vibe) => {
+                                const owned = isOwned(vibe);
+                                return (
+                                    <button
+                                        key={vibe.id}
+                                        type="button"
+                                        onClick={() => setSelectedVibe(vibe.id)}
+                                        className={`relative p-5 rounded-xl border-2 text-left transition-all ${selectedVibe === vibe.id
+                                            ? 'border-[var(--gold)] bg-[var(--gold)]/5'
+                                            : 'border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[var(--border-active)]'
+                                            }`}
+                                    >
+                                        <div className="text-3xl mb-2">{vibe.emoji}</div>
+                                        <h3 className="text-[var(--text-primary)] font-semibold text-sm mb-1">
+                                            {vibe.label}
+                                        </h3>
+                                        <p className="text-[var(--text-tertiary)] text-xs leading-relaxed">
+                                            {vibe.description}
+                                        </p>
+                                        {/* Status badge: Purchased or Demo */}
+                                        <div className="absolute top-3 right-3">
+                                            {owned ? (
+                                                <span className="px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+                                                    ✅ Purchased
+                                                </span>
+                                            ) : (
+                                                <span className="px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/25">
+                                                    Demo
+                                                </span>
+                                            )}
                                         </div>
-                                    )}
-                                </button>
-                            ))}
+                                        {/* Selected check */}
+                                        {selectedVibe === vibe.id && (
+                                            <div className="absolute bottom-4 right-4 w-5 h-5 bg-[var(--gold)] rounded-full flex items-center justify-center">
+                                                <span className="text-[var(--bg-deep)] text-xs font-bold">✓</span>
+                                            </div>
+                                        )}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 

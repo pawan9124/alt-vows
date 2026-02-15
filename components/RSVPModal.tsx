@@ -8,9 +8,10 @@ interface RSVPModalProps {
   isOpen: boolean;
   onClose: () => void;
   weddingId: string;
+  isDemo?: boolean;
 }
 
-export const RSVPModal: React.FC<RSVPModalProps> = ({ isOpen, onClose, weddingId }) => {
+export const RSVPModal: React.FC<RSVPModalProps> = ({ isOpen, onClose, weddingId, isDemo = false }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -162,8 +163,8 @@ export const RSVPModal: React.FC<RSVPModalProps> = ({ isOpen, onClose, weddingId
                             type="button"
                             onClick={() => handleChange('attending', true)}
                             className={`flex-1 px-4 py-2 rounded-md font-serif transition-all ${formData.attending
-                                ? 'bg-burgundy text-white shadow-md'
-                                : 'bg-white border border-warmBrown/30 text-warmBrown hover:border-burgundy'
+                              ? 'bg-burgundy text-white shadow-md'
+                              : 'bg-white border border-warmBrown/30 text-warmBrown hover:border-burgundy'
                               }`}
                           >
                             Yes
@@ -172,8 +173,8 @@ export const RSVPModal: React.FC<RSVPModalProps> = ({ isOpen, onClose, weddingId
                             type="button"
                             onClick={() => handleChange('attending', false)}
                             className={`flex-1 px-4 py-2 rounded-md font-serif transition-all ${!formData.attending
-                                ? 'bg-burgundy text-white shadow-md'
-                                : 'bg-white border border-warmBrown/30 text-warmBrown hover:border-burgundy'
+                              ? 'bg-burgundy text-white shadow-md'
+                              : 'bg-white border border-warmBrown/30 text-warmBrown hover:border-burgundy'
                               }`}
                           >
                             No
@@ -234,12 +235,20 @@ export const RSVPModal: React.FC<RSVPModalProps> = ({ isOpen, onClose, weddingId
                       </div>
 
                       {/* Submit Button */}
+                      {isDemo && (
+                        <div className="px-4 py-2.5 bg-amber-900/30 border border-amber-500/30 rounded-lg text-center">
+                          <p className="text-amber-400 text-xs font-semibold">✨ Publish your site to start collecting RSVPs</p>
+                        </div>
+                      )}
                       <button
                         type="submit"
-                        disabled={isLoading}
-                        className="w-full bg-burgundy text-white py-3 rounded-md font-serif text-lg hover:bg-burgundy/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                        disabled={isLoading || isDemo}
+                        className={`w-full py-3 rounded-md font-serif text-lg transition-colors shadow-md ${isDemo
+                          ? 'bg-gray-400 text-gray-200 cursor-not-allowed opacity-60'
+                          : 'bg-burgundy text-white hover:bg-burgundy/90 disabled:opacity-50 disabled:cursor-not-allowed'
+                          }`}
                       >
-                        {isLoading ? 'Submitting...' : 'Submit RSVP'}
+                        {isDemo ? '🔒 Publish to Send RSVPs' : isLoading ? 'Submitting...' : 'Submit RSVP'}
                       </button>
                     </form>
                   </>
@@ -252,4 +261,5 @@ export const RSVPModal: React.FC<RSVPModalProps> = ({ isOpen, onClose, weddingId
     </AnimatePresence>
   );
 };
+
 

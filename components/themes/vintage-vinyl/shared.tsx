@@ -452,7 +452,7 @@ export const Signature = ({ color = '#2d1b0e' }: { color?: string }) => (
     </div>
 );
 
-export const RSVPModal = ({ onClose, confirmationMessage, deadline, weddingId }: { onClose: () => void, confirmationMessage: string, deadline: string, weddingId?: string }) => {
+export const RSVPModal = ({ onClose, confirmationMessage, deadline, weddingId, isDemo = false }: { onClose: () => void, confirmationMessage: string, deadline: string, weddingId?: string, isDemo?: boolean }) => {
     const [name, setName] = useState('');
     const [attending, setAttending] = useState(true);
     const [guestCount, setGuestCount] = useState(1);
@@ -623,12 +623,20 @@ export const RSVPModal = ({ onClose, confirmationMessage, deadline, weddingId }:
                         )}
 
                         <div className="pt-2">
+                            {isDemo && (
+                                <div className="mb-3 px-4 py-2.5 bg-amber-50 border border-amber-300/50 rounded text-center">
+                                    <p className="text-amber-700 text-xs font-semibold">✨ Publish your site to start collecting RSVPs</p>
+                                </div>
+                            )}
                             <button
                                 type="submit"
-                                disabled={status === 'loading'}
-                                className="w-full bg-[#2d1b0e] text-[#fdfbf7] py-4 font-sans font-bold uppercase tracking-widest hover:bg-[#4a3b2a] transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={status === 'loading' || isDemo}
+                                className={`w-full py-4 font-sans font-bold uppercase tracking-widest transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${isDemo
+                                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                                        : 'bg-[#2d1b0e] text-[#fdfbf7] hover:bg-[#4a3b2a]'
+                                    }`}
                             >
-                                {status === 'loading' ? 'Sending...' : 'Confirm Attendance'}
+                                {isDemo ? '🔒 Publish to Send RSVPs' : status === 'loading' ? 'Sending...' : 'Confirm Attendance'}
                             </button>
                             <p className="text-center mt-4 font-serif italic text-sm text-[#8c7b66]">{confirmationMessage}</p>
                         </div>

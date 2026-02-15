@@ -39,7 +39,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ config }) => {
 
                 {/* BUTTON WITH LINK - ensure clickable */}
                 <Link
-                    href={`/demo/${config.slug}`}
+                    href="/redeem"
                     className="inline-block w-fit z-50 relative"
                 >
                     <button

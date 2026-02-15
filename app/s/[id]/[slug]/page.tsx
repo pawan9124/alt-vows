@@ -14,11 +14,11 @@ import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 
 interface Props {
-    params: Promise<{ slug: string }>;
+    params: Promise<{ id: string; slug: string }>;
 }
 
 export default function ProductionSitePage({ params }: Props) {
-    const { slug } = React.use(params);
+    const { id: siteId, slug } = React.use(params);
     const { activeTheme, setTheme } = useEditorStore();
 
     const [isInviteOpen, setIsInviteOpen] = useState(false);
@@ -34,7 +34,7 @@ export default function ProductionSitePage({ params }: Props) {
                 const { data, error } = await supabase
                     .from('websites')
                     .select('content, theme_id, status')
-                    .eq('slug', slug)
+                    .eq('site_id', siteId)
                     .maybeSingle();
 
                 if (error) {
@@ -63,11 +63,11 @@ export default function ProductionSitePage({ params }: Props) {
 
         hydrate();
         return () => { cancelled = true; };
-    }, [slug, setTheme]);
+    }, [siteId, setTheme]);
 
     // Redirect demo sites
     if (shouldRedirectDemo) {
-        redirect(`/demo/${slug}`);
+        redirect(`/demo/${siteId}/${slug}`);
     }
 
     // 404 state
@@ -97,15 +97,16 @@ export default function ProductionSitePage({ params }: Props) {
                 {!isInviteOpen ? (
                     <motion.div key="gatekeeper-wrapper" className="absolute inset-0 z-20">
                         <Gatekeeper
-                            config={{ ...currentConfig, ...pages.gatekeeper, weddingId: slug }}
+                            config={{ ...currentConfig, ...pages.gatekeeper, weddingId: `${siteId}/${slug}` }}
                             onOpen={() => setIsInviteOpen(true)}
                         />
                     </motion.div>
                 ) : (
                     <motion.div key="player-wrapper" className="absolute inset-0 z-30">
                         <Player
-                            config={{ ...currentConfig, ...pages.player, weddingId: slug }}
+                            config={{ ...currentConfig, ...pages.player, weddingId: `${siteId}/${slug}` }}
                             onClose={() => setIsInviteOpen(false)}
+                            isDemo={false}
                         />
                     </motion.div>
                 )}

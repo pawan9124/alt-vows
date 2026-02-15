@@ -61,3 +61,6 @@ export default {
   component: VintageVinylTheme,
   config: defaultContent,
 };
+
+export const component = VintageVinylTheme;
+export const config = defaultContent;

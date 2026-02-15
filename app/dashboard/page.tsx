@@ -6,11 +6,13 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import { PublishButton } from '@/components/PublishButton';
-import { Copy, Check, Users, Plus } from 'lucide-react';
+import { Copy, Check, Users, Plus, Palette, LayoutGrid, Trash2, Tag, Gift } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import niches from '@/data/niches.json';
 
 interface WebsiteRow {
     slug: string;
+    site_id: string;
     theme_id: string;
     content: any;
     status: string;
@@ -27,6 +29,7 @@ function DashboardContent() {
     const [loading, setLoading] = useState(true);
     const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
     const [rsvpCounts, setRsvpCounts] = useState<Record<string, number>>({});
+    const [activeTab, setActiveTab] = useState<'themes' | 'sites'>('themes');
 
     // Payment success state
     const paymentSuccess = searchParams.get('payment') === 'success';
@@ -95,8 +98,29 @@ function DashboardContent() {
         router.push('/');
     };
 
+    const handleDeleteSite = async (slug: string) => {
+        const site = sites.find(s => s.slug === slug);
+        const label = site?.content?.hero?.names || slug;
+        if (!window.confirm(`Delete "${label}"? This cannot be undone.`)) return;
+
+        try {
+            const { error } = await supabase
+                .from('websites')
+                .delete()
+                .eq('slug', slug)
+                .eq('owner_id', user!.id);
+
+            if (error) throw error;
+            setSites(prev => prev.filter(s => s.slug !== slug));
+        } catch (err: any) {
+            console.error('Delete failed:', err.message);
+            alert('Failed to delete site. Check console for details.');
+        }
+    };
+
     const handleCopyLink = (slug: string) => {
-        const url = `${window.location.origin}/s/${slug}`;
+        const site = sites.find(s => s.slug === slug);
+        const url = `${window.location.origin}/s/${site?.site_id || ''}/${slug}`;
         navigator.clipboard.writeText(url);
         setCopiedSlug(slug);
         setTimeout(() => setCopiedSlug(null), 2000);
@@ -165,8 +189,170 @@ function DashboardContent() {
                     </div>
                 </div>
 
-                {/* Content */}
-                {loading ? (
+                {/* Tab Navigation */}
+                <div className="flex gap-1 mb-8 bg-[var(--bg-surface)] p-1 rounded-xl border border-[var(--border-subtle)] w-fit">
+                    <button
+                        onClick={() => setActiveTab('themes')}
+                        className={`flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg transition-all ${activeTab === 'themes'
+                            ? 'bg-[var(--gold)] text-[var(--bg-deep)] shadow-md'
+                            : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
+                            }`}
+                    >
+                        <Palette className="w-4 h-4" />
+                        Themes
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('sites')}
+                        className={`flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg transition-all ${activeTab === 'sites'
+                            ? 'bg-[var(--gold)] text-[var(--bg-deep)] shadow-md'
+                            : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
+                            }`}
+                    >
+                        <LayoutGrid className="w-4 h-4" />
+                        My Sites
+                        {totalSites > 0 && (
+                            <span className={`ml-1 px-1.5 py-0.5 text-[10px] font-bold rounded-full ${activeTab === 'sites'
+                                ? 'bg-[var(--bg-deep)]/20 text-[var(--bg-deep)]'
+                                : 'bg-[var(--gold)]/15 text-[var(--gold)]'
+                                }`}>{totalSites}</span>
+                        )}
+                    </button>
+                </div>
+
+                {/* Tab Content */}
+                {activeTab === 'themes' ? (
+                    /* ─── Themes Storefront ─── */
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {(niches as any[]).map((niche, index) => {
+                            const primary = niche.theme?.global?.palette?.primary || 'var(--gold)';
+                            const bgImage = niche.theme?.pages?.landing?.backgroundValue || niche.theme?.pages?.gatekeeper?.backgroundTexture;
+                            // Match ownership: check nicheSlug first, then fallback to primary color match
+                            const ownedSite = sites.find(s => {
+                                // Direct nicheSlug match (new sites)
+                                if (s.content?.nicheSlug === niche.slug) return true;
+                                // Fallback: same theme_id + same primary color (for sites created before nicheSlug was stored)
+                                if (s.theme_id === niche.archetypeId && s.status === 'production') {
+                                    const sitePrimary = s.content?.theme?.global?.palette?.primary;
+                                    if (sitePrimary && sitePrimary === primary) return true;
+                                }
+                                return false;
+                            });
+
+                            return (
+                                <motion.div
+                                    key={niche.slug}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.08, duration: 0.4, ease: 'easeOut' }}
+                                    className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden hover:border-[var(--border-active)] transition-all group"
+                                >
+                                    {/* Theme Preview Banner */}
+                                    <div
+                                        className="h-36 relative overflow-hidden"
+                                        style={{
+                                            background: bgImage
+                                                ? `url(${bgImage}) center/cover`
+                                                : `linear-gradient(135deg, ${primary}30, ${primary}08, var(--bg-deep))`,
+                                        }}
+                                    >
+                                        {/* Overlay for readability */}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+
+                                        {/* Accent glow */}
+                                        <div
+                                            className="absolute top-0 right-0 w-40 h-40 rounded-full blur-3xl opacity-30"
+                                            style={{ background: primary }}
+                                        />
+
+                                        {/* Owned badge */}
+                                        {ownedSite && (
+                                            <div className="absolute top-3 right-3">
+                                                <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 backdrop-blur-sm"
+                                                    style={{ fontFamily: 'var(--font-jetbrains)' }}
+                                                >
+                                                    ✅ Purchased
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        {/* Theme name overlay */}
+                                        <div className="absolute bottom-3 left-4 right-4">
+                                            <h3 className="text-white font-bold text-lg drop-shadow-md">
+                                                {niche.hero?.title || niche.slug.replace(/-/g, ' ')}
+                                            </h3>
+                                            <p className="text-white/70 text-xs mt-0.5 capitalize">
+                                                {niche.archetypeId?.replace(/-/g, ' ')} theme
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Card Body */}
+                                    <div className="p-5">
+                                        <p className="text-[var(--text-tertiary)] text-xs mb-3">
+                                            {niche.hero?.names || 'Preview names'} · {niche.hero?.date || 'Date TBD'}
+                                        </p>
+
+                                        {/* Price / Purchased indicator */}
+                                        <div className="flex items-center gap-2 mb-4">
+                                            {ownedSite ? (
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+                                                    <Check className="w-3 h-3" /> Purchased
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-lg bg-[var(--gold)]/10 text-[var(--gold)] border border-[var(--gold)]/20">
+                                                    <Tag className="w-3 h-3" /> $49
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="flex flex-col gap-2">
+                                            {ownedSite ? (
+                                                <div className="flex gap-2">
+                                                    <Link
+                                                        href={`/demo/${ownedSite.site_id}/${ownedSite.slug}`}
+                                                        className="flex-1 text-center px-3 py-2 bg-[var(--gold)] hover:bg-[var(--gold-hover)] text-[var(--bg-deep)] font-bold text-xs rounded-lg transition-all uppercase tracking-wide"
+                                                    >
+                                                        Edit
+                                                    </Link>
+                                                    <Link
+                                                        href={`/themes/${niche.slug}`}
+                                                        className="flex-1 text-center px-3 py-2 bg-[var(--bg-elevated)] hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-bold text-xs rounded-lg transition-all border border-[var(--border-subtle)] uppercase tracking-wide"
+                                                    >
+                                                        Preview
+                                                    </Link>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <div className="flex gap-2">
+                                                        <Link
+                                                            href={`/themes/${niche.slug}`}
+                                                            className="flex-1 text-center px-3 py-2 bg-[var(--bg-elevated)] hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-bold text-xs rounded-lg transition-all border border-[var(--border-subtle)] uppercase tracking-wide"
+                                                        >
+                                                            Preview
+                                                        </Link>
+                                                        <Link
+                                                            href="/redeem"
+                                                            className="flex-1 text-center px-3 py-2 bg-[var(--bg-elevated)] hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-bold text-xs rounded-lg transition-all border border-[var(--border-subtle)] uppercase tracking-wide flex items-center justify-center gap-1"
+                                                        >
+                                                            <Gift className="w-3 h-3" /> Redeem
+                                                        </Link>
+                                                    </div>
+                                                    <Link
+                                                        href="/redeem"
+                                                        className="w-full text-center px-3 py-2 bg-[var(--gold)] hover:bg-[var(--gold-hover)] text-[var(--bg-deep)] font-bold text-xs rounded-lg transition-all uppercase tracking-wide"
+                                                    >
+                                                        $49 Buy
+                                                    </Link>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
+                    </div>
+                ) : loading ? (
                     <div className="flex justify-center py-20">
                         <div className="w-8 h-8 border-2 border-[var(--border-subtle)] border-t-[var(--gold)] rounded-full animate-spin" />
                     </div>
@@ -311,7 +497,7 @@ function DashboardContent() {
                                         <div className="flex flex-col gap-2 mt-4">
                                             <div className="flex gap-2">
                                                 <Link
-                                                    href={`/demo/${site.slug}`}
+                                                    href={`/demo/${site.site_id}/${site.slug}`}
                                                     className="flex-1 text-center px-3 py-2 bg-[var(--gold)] hover:bg-[var(--gold-hover)] text-[var(--bg-deep)] font-bold text-xs rounded-lg transition-all uppercase tracking-wide"
                                                 >
                                                     Edit
@@ -339,6 +525,12 @@ function DashboardContent() {
                                                     <Users className="w-3.5 h-3.5" /> View RSVPs
                                                 </Link>
                                             )}
+                                            <button
+                                                onClick={() => handleDeleteSite(site.slug)}
+                                                className="flex items-center justify-center gap-1.5 px-3 py-2 bg-red-500/5 hover:bg-red-500/15 text-red-400/60 hover:text-red-400 text-xs font-semibold rounded-lg transition-all border border-red-500/10 hover:border-red-500/30 uppercase tracking-wide"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" /> Delete
+                                            </button>
                                         </div>
                                     </div>
                                 </motion.div>

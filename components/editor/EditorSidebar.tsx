@@ -4,12 +4,13 @@ import React, { useState, useMemo } from 'react';
 import { useEditorStore, getNestedValue } from '@/store/useEditorStore';
 import { vintageVinylSchema } from '@/data/schemas/vintageVinly';
 import { voyagerSchema } from '@/data/schemas/voyager';
-import { X, Settings, Save, Loader2 } from 'lucide-react';
+import { X, Settings, Save, Loader2, Lock } from 'lucide-react';
 import { ImageField } from './fields/ImageField';
 import { ImageListField } from './fields/ImageListField';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { PublishButton } from '@/components/PublishButton';
+import { FREE_FIELDS } from '@/lib/generateSiteId';
 
 // Schema registry — maps theme_id to its editor schema
 const SCHEMA_REGISTRY: Record<string, any[]> = {
@@ -25,10 +26,15 @@ interface SchemaField {
     options?: string[];
 }
 
-export const EditorSidebar = () => {
+interface EditorSidebarProps {
+    siteStatus?: string;
+}
+
+export const EditorSidebar = ({ siteStatus = 'demo' }: EditorSidebarProps) => {
     const { activeTheme, updateField, isOpen, toggleEditor } = useEditorStore();
     const { user } = useAuth();
     const [isSaving, setIsSaving] = useState(false);
+    const isDemo = siteStatus !== 'production';
 
     // Resolve the correct theme_id from activeTheme
     const themeId = (activeTheme as any)?.themeId || (activeTheme as any)?.theme_id || 'vintage-vinyl';
@@ -108,74 +114,95 @@ export const EditorSidebar = () => {
                                 {section.fields.map((f: any) => {
                                     const field = f as SchemaField;
                                     const val = getNestedValue(activeTheme, field.key);
+                                    const isLocked = isDemo && !FREE_FIELDS.includes(field.key);
 
                                     return (
-                                        <div key={field.key} className="space-y-2">
-                                            {/* Label is handled inside complex fields, but we keep it for simple ones */}
+                                        <div key={field.key} className={`space-y-2 ${isLocked ? 'opacity-50' : ''}`}>
+                                            {/* Label for simple fields */}
                                             {field.type !== 'image' && field.type !== 'image-list' && (
-                                                <label className="text-[10px] uppercase font-semibold text-white/40 block">
+                                                <label className="text-[10px] uppercase font-semibold text-white/40 block flex items-center gap-1.5">
+                                                    {isLocked && <Lock className="w-3 h-3 text-yellow-500/60" />}
                                                     {field.label}
+                                                    {isLocked && (
+                                                        <span className="text-yellow-500/50 text-[8px] ml-auto">Publish to unlock</span>
+                                                    )}
                                                 </label>
                                             )}
 
-                                            {field.type === 'text' && (
-                                                <input
-                                                    type="text"
-                                                    value={val || ''}
-                                                    onChange={(e) => updateField(field.key, e.target.value)}
-                                                    className="w-full bg-black border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-yellow-500/50 outline-none transition-colors"
-                                                    placeholder={field.placeholder}
-                                                />
-                                            )}
-
-                                            {field.type === 'textarea' && (
-                                                <textarea
-                                                    value={val || ''}
-                                                    onChange={(e) => updateField(field.key, e.target.value)}
-                                                    className="w-full bg-black border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-yellow-500/50 outline-none transition-colors h-24 resize-none"
-                                                    placeholder={field.placeholder}
-                                                />
-                                            )}
-
-                                            {field.type === 'color' && (
-                                                <div className="flex items-center gap-2 bg-black border border-white/10 rounded p-1">
-                                                    <input
-                                                        type="color"
-                                                        value={val || '#000000'}
-                                                        onChange={(e) => updateField(field.key, e.target.value)}
-                                                        className="h-6 w-6 bg-transparent border-none cursor-pointer rounded-sm"
-                                                    />
-                                                    <span className="text-xs text-white/60 font-mono uppercase">{val}</span>
+                                            {/* Locked overlay */}
+                                            {isLocked ? (
+                                                <div className="w-full bg-black/50 border border-white/5 rounded px-3 py-2 text-sm text-white/20 cursor-not-allowed select-none">
+                                                    {field.type === 'image' || field.type === 'image-list' ? (
+                                                        <div className="flex items-center gap-2">
+                                                            <Lock className="w-3 h-3 text-yellow-500/40" />
+                                                            <span className="text-[10px] uppercase text-yellow-500/40">{field.label} — Publish to unlock</span>
+                                                        </div>
+                                                    ) : (
+                                                        val || field.placeholder || '•••'
+                                                    )}
                                                 </div>
-                                            )}
+                                            ) : (
+                                                <>
+                                                    {field.type === 'text' && (
+                                                        <input
+                                                            type="text"
+                                                            value={val || ''}
+                                                            onChange={(e) => updateField(field.key, e.target.value)}
+                                                            className="w-full bg-black border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-yellow-500/50 outline-none transition-colors"
+                                                            placeholder={field.placeholder}
+                                                        />
+                                                    )}
 
-                                            {/* Smart Image Fields */}
-                                            {field.type === 'image' && (
-                                                <ImageField
-                                                    label={field.label}
-                                                    value={val}
-                                                    onChange={(newValue) => updateField(field.key, newValue)}
-                                                />
-                                            )}
+                                                    {field.type === 'textarea' && (
+                                                        <textarea
+                                                            value={val || ''}
+                                                            onChange={(e) => updateField(field.key, e.target.value)}
+                                                            className="w-full bg-black border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-yellow-500/50 outline-none transition-colors h-24 resize-none"
+                                                            placeholder={field.placeholder}
+                                                        />
+                                                    )}
 
-                                            {field.type === 'image-list' && (
-                                                <ImageListField
-                                                    label={field.label}
-                                                    values={val}
-                                                    onChange={(newValues) => updateField(field.key, newValues)}
-                                                />
-                                            )}
+                                                    {field.type === 'color' && (
+                                                        <div className="flex items-center gap-2 bg-black border border-white/10 rounded p-1">
+                                                            <input
+                                                                type="color"
+                                                                value={val || '#000000'}
+                                                                onChange={(e) => updateField(field.key, e.target.value)}
+                                                                className="h-6 w-6 bg-transparent border-none cursor-pointer rounded-sm"
+                                                            />
+                                                            <span className="text-xs text-white/60 font-mono uppercase">{val}</span>
+                                                        </div>
+                                                    )}
 
-                                            {field.type === 'select' && (
-                                                <select
-                                                    value={val || ''}
-                                                    onChange={(e) => updateField(field.key, e.target.value)}
-                                                    className="w-full bg-black border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-yellow-500/50 outline-none"
-                                                >
-                                                    {field.options?.map((opt: string) => (
-                                                        <option key={opt} value={opt}>{opt}</option>
-                                                    ))}
-                                                </select>
+                                                    {/* Smart Image Fields */}
+                                                    {field.type === 'image' && (
+                                                        <ImageField
+                                                            label={field.label}
+                                                            value={val}
+                                                            onChange={(newValue) => updateField(field.key, newValue)}
+                                                        />
+                                                    )}
+
+                                                    {field.type === 'image-list' && (
+                                                        <ImageListField
+                                                            label={field.label}
+                                                            values={val}
+                                                            onChange={(newValues) => updateField(field.key, newValues)}
+                                                        />
+                                                    )}
+
+                                                    {field.type === 'select' && (
+                                                        <select
+                                                            value={val || ''}
+                                                            onChange={(e) => updateField(field.key, e.target.value)}
+                                                            className="w-full bg-black border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-yellow-500/50 outline-none"
+                                                        >
+                                                            {field.options?.map((opt: string) => (
+                                                                <option key={opt} value={opt}>{opt}</option>
+                                                            ))}
+                                                        </select>
+                                                    )}
+                                                </>
                                             )}
                                         </div>
                                     );

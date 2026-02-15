@@ -3,17 +3,17 @@ import { supabase } from '@/lib/supabase';
 import type { Metadata } from 'next';
 
 interface Props {
-    params: Promise<{ slug: string }>;
+    params: Promise<{ id: string; slug: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-    const { slug } = await params;
+    const { id: siteId, slug } = await params;
 
     try {
         const { data } = await supabase
             .from('websites')
             .select('content, theme_id')
-            .eq('slug', slug)
+            .eq('site_id', siteId)
             .eq('status', 'production')
             .maybeSingle();
 
@@ -32,7 +32,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             ? `You're invited to ${names}'s wedding on ${date}. View their interactive wedding website.`
             : `You're invited to ${names}'s wedding. View their interactive wedding website.`;
 
-        // Try to get an OG image from gallery or story image
         const ogImage =
             content.story?.image ||
             content.gallery?.images?.[0] ||
@@ -46,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
                 title,
                 description,
                 type: 'website',
-                url: `/s/${slug}`,
+                url: `/s/${siteId}/${slug}`,
                 ...(ogImage ? { images: [{ url: ogImage, width: 1200, height: 630 }] } : {}),
             },
             twitter: {

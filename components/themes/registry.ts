@@ -1,8 +1,9 @@
 // Theme Component Imports
-import VintageVinylPkg from './vintage-vinyl';
+import { component as VintageVinylComponent, config as VintageVinylConfig } from './vintage-vinyl';
 import TheVoyagerThemePkg from './the-voyager';
 
-const VintageVinylTheme = VintageVinylPkg.component;
+const VintageVinylPkg = { component: VintageVinylComponent, config: VintageVinylConfig };
+const VintageVinylTheme = VintageVinylComponent;
 
 // =============================================================================
 // THEME REGISTRY

@@ -5,18 +5,18 @@ import { mergeConfig } from '@/components/themes/vintage-vinyl/config';
 import type { Metadata } from 'next';
 
 interface Props {
-    params: Promise<{ slug: string }>;
+    params: Promise<{ id: string; slug: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-    const { slug } = await params;
+    const { id: siteId, slug } = await params;
 
     try {
         // Try Supabase first
         const { data } = await supabase
             .from('websites')
             .select('content, theme_id')
-            .eq('slug', slug)
+            .eq('site_id', siteId)
             .maybeSingle();
 
         let content = data?.content;
@@ -56,7 +56,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
                 title,
                 description,
                 type: 'website',
-                url: `/demo/${slug}`,
+                url: `/demo/${siteId}/${slug}`,
                 ...(ogImage ? { images: [{ url: ogImage, width: 1200, height: 630 }] } : {}),
             },
             twitter: {

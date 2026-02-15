@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase-server';
 import { mergeConfig } from '@/components/themes/vintage-vinyl/config';
 import { theVoyagerConfig } from '@/components/themes/the-voyager/config';
 import niches from '@/data/niches.json';
+import { generateSlug, generateSiteId, normalizeNames } from '@/lib/generateSiteId';
 
 // Validate a code without redeeming (GET ?code=xxx)
 // Optionally checks if the authenticated user already redeemed this code
@@ -55,14 +56,14 @@ export async function GET(req: NextRequest) {
                 if (user) {
                     const { data: existingSite } = await supabaseAdmin
                         .from('websites')
-                        .select('slug')
+                        .select('slug, site_id')
                         .eq('owner_id', user.id)
                         .like('payment_id', `redeem-${code}%`)
                         .maybeSingle();
 
                     if (existingSite) {
                         alreadyRedeemed = true;
-                        existingSlug = existingSite.slug;
+                        existingSlug = existingSite.site_id + '/' + existingSite.slug;
                     }
                 }
             } catch {
@@ -135,7 +136,7 @@ export async function POST(req: NextRequest) {
         const paymentIdPrefix = `redeem-${codeData.code}`;
         const { data: existingSite } = await supabaseAdmin
             .from('websites')
-            .select('slug')
+            .select('slug, site_id')
             .eq('owner_id', user.id)
             .like('payment_id', `${paymentIdPrefix}%`)
             .maybeSingle();
@@ -143,41 +144,13 @@ export async function POST(req: NextRequest) {
         if (existingSite) {
             return NextResponse.json({
                 error: 'You have already redeemed this code. Check your dashboard for your existing site.',
-                existing_slug: existingSite.slug,
+                existing_slug: existingSite.site_id + '/' + existingSite.slug,
             }, { status: 409 });
         }
 
-        // Generate slug from names
-        const slug = names
-            .toLowerCase()
-            .replace(/&/g, 'and')
-            .replace(/[^a-z0-9\s-]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/-+/g, '-')
-            .trim();
-
-        // Check slug uniqueness
-        const { data: existing } = await supabaseAdmin
-            .from('websites')
-            .select('slug')
-            .eq('slug', slug)
-            .maybeSingle();
-
-        if (existing) {
-            return NextResponse.json(
-                { error: `A site with the URL "${slug}" already exists. Try different names.` },
-                { status: 409 }
-            );
-        }
-
-        // Normalize names: "Moly and Goli" → "Moly & Goli"
-        const normalizeNames = (input: string): string => {
-            const parts = input.split(/\s+(?:&|and)\s+/i);
-            if (parts.length >= 2) {
-                return `${parts[0].trim()} & ${parts[1].trim()}`;
-            }
-            return input.trim();
-        };
+        // Generate slug and siteId from names
+        const slug = generateSlug(names);
+        const siteId = generateSiteId();
 
         // Build site content based on theme
         const themeId = codeData.theme_id;
@@ -196,7 +169,9 @@ export async function POST(req: NextRequest) {
             content = {
                 ...theVoyagerConfig.defaultContent,
                 slug,
+                siteId,
                 themeId: 'the-voyager',
+                nicheSlug: null,
                 hero: {
                     ...theVoyagerConfig.defaultContent.hero,
                     names: normalizeNames(names),
@@ -219,7 +194,9 @@ export async function POST(req: NextRequest) {
             content = {
                 ...baseContent,
                 slug,
+                siteId,
                 themeId,
+                nicheSlug: nicheSlug || null,
                 hero: {
                     ...baseContent.hero,
                     names: normalizeNames(names),
@@ -231,6 +208,7 @@ export async function POST(req: NextRequest) {
         // Insert the website with status 'production' (pre-paid!)
         const { error: insertError } = await supabaseAdmin.from('websites').insert({
             slug,
+            site_id: siteId,
             theme_id: themeId,
             owner_id: user.id,
             content,
@@ -256,9 +234,9 @@ export async function POST(req: NextRequest) {
             // Site was created, so don't fail — just log
         }
 
-        console.log(`[Redeem] Code ${code} redeemed by ${user.email} → site "${slug}" (production, use #${(codeData.use_count || 0) + 1})`);
+        console.log(`[Redeem] Code ${code} redeemed by ${user.email} → site "${siteId}/${slug}" (production, use #${(codeData.use_count || 0) + 1})`);
 
-        return NextResponse.json({ slug, status: 'production' });
+        return NextResponse.json({ slug: `${siteId}/${slug}`, site_id: siteId, status: 'production' });
     } catch (err: any) {
         console.error('[Redeem] Unexpected error:', err);
         return NextResponse.json(

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import { Gift, Loader2, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
+import { generateSlug } from '@/lib/generateSiteId';
 
 // Theme vibe display data (matches dashboard/create)
 const THEME_INFO: Record<string, { label: string; emoji: string; color: string }> = {
@@ -156,14 +157,8 @@ function RedeemContent() {
         }
     };
 
-    const generateSlug = (input: string): string => {
-        return input
-            .toLowerCase()
-            .replace(/&/g, 'and')
-            .replace(/[^a-z0-9\s-]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/-+/g, '-')
-            .trim();
+    const generateSlugLocal = (input: string): string => {
+        return generateSlug(input);
     };
 
     // Get display info for the theme
@@ -322,7 +317,7 @@ function RedeemContent() {
                                     />
                                     {names && (
                                         <p className="text-[var(--text-tertiary)] text-xs mt-2">
-                                            URL: /s/<span className="text-[var(--gold-muted)]">{generateSlug(names)}</span>
+                                            URL: /s/xxxx/<span className="text-[var(--gold-muted)]">{generateSlugLocal(names)}</span>
                                         </p>
                                     )}
                                 </div>
