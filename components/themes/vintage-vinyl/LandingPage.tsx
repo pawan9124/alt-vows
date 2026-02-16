@@ -39,7 +39,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ config }) => {
 
                 {/* BUTTON WITH LINK - ensure clickable */}
                 <Link
-                    href="/redeem"
+                    href="/auth"
                     className="inline-block w-fit z-50 relative"
                 >
                     <button

@@ -13,6 +13,7 @@ import { useEditorStore } from '@/store/useEditorStore';
 import { mergeConfig } from '@/components/themes/vintage-vinyl/config';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
+import { PublishButton } from '@/components/PublishButton';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -134,13 +135,13 @@ export default function DemoPage({ params }: Props) {
 
             {/* Demo Banner — different for owner vs visitor */}
             {isDemo && isOwner && (
-                <div className="fixed top-0 left-0 right-0 z-[90] bg-gradient-to-r from-yellow-600/90 via-yellow-500/90 to-yellow-600/90 backdrop-blur-sm text-center py-2 px-4">
-                    <p className="text-black text-xs font-bold uppercase tracking-wider">
-                        ⚡ Demo Preview —{' '}
-                        <span className="underline underline-offset-2">
-                            Publish to go live
-                        </span>
+                <div className="fixed top-0 left-0 right-0 z-[90] h-12 bg-gradient-to-r from-yellow-600/90 via-yellow-500/90 to-yellow-600/90 backdrop-blur-sm flex items-center justify-center gap-4 px-4 shadow-lg">
+                    <p className="text-black text-[10px] font-bold uppercase tracking-widest hidden sm:block">
+                        ⚡ Demo Preview
                     </p>
+                    <div className="w-fit">
+                        <PublishButton slug={slug} />
+                    </div>
                 </div>
             )}
 

@@ -44,8 +44,8 @@ export const NavBar = () => {
         <>
             <nav
                 className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
-                        ? 'glass border-b border-[var(--border-subtle)]'
-                        : 'bg-transparent'
+                    ? 'glass border-b border-[var(--border-subtle)]'
+                    : 'bg-transparent'
                     }`}
             >
                 <div className="max-w-[1200px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
@@ -70,6 +70,12 @@ export const NavBar = () => {
                                     {link.label}
                                 </a>
                             ))}
+                            <Link
+                                href="/redeem"
+                                className="text-[var(--gold)] text-sm font-medium hover:text-[var(--gold-hover)] transition-colors tracking-wide"
+                            >
+                                Redeem Code
+                            </Link>
                         </div>
                     )}
 
@@ -140,17 +146,28 @@ export const NavBar = () => {
                         className="fixed inset-0 z-40 bg-[var(--bg-deep)] pt-20"
                     >
                         <div className="flex flex-col items-center gap-6 px-8 py-8">
-                            {isLandingPage &&
-                                NAV_LINKS.map((link) => (
-                                    <a
-                                        key={link.href}
-                                        href={link.href}
+                            {isLandingPage && (
+                                <>
+                                    {NAV_LINKS.map((link) => (
+                                        <a
+                                            key={link.href}
+                                            href={link.href}
+                                            onClick={() => setMobileOpen(false)}
+                                            className="text-[var(--text-primary)] text-lg font-medium"
+                                        >
+                                            {link.label}
+                                        </a>
+                                    ))}
+                                    {/* Mobile Redeem Link */}
+                                    <Link
+                                        href="/redeem"
                                         onClick={() => setMobileOpen(false)}
-                                        className="text-[var(--text-primary)] text-lg font-medium"
+                                        className="text-[var(--gold)] text-lg font-medium"
                                     >
-                                        {link.label}
-                                    </a>
-                                ))}
+                                        Redeem Code
+                                    </Link>
+                                </>
+                            )}
                             <div className="w-12 h-px bg-[var(--border-subtle)]" />
                             {loading ? null : user ? (
                                 <Link

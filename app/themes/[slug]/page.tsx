@@ -37,10 +37,10 @@ export default function ThemePreviewPage() {
                     👁️ Preview Mode — This is how your site will look
                 </p>
                 <Link
-                    href="/redeem"
+                    href="/auth"
                     className="px-4 py-1 bg-white/20 hover:bg-white/30 text-white font-bold text-[10px] rounded-full transition-all uppercase tracking-wider border border-white/20"
                 >
-                    Get This Theme — $49
+                    Get Started — $49
                 </Link>
             </div>
 

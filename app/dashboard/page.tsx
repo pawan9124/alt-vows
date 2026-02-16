@@ -346,10 +346,10 @@ function DashboardContent() {
                                                         ✨ Try Demo
                                                     </Link>
                                                     <Link
-                                                        href="/redeem"
+                                                        href={`/dashboard/create?theme=${niche.slug}`}
                                                         className="w-full text-center px-3 py-2 bg-[var(--gold)] hover:bg-[var(--gold-hover)] text-[var(--bg-deep)] font-bold text-xs rounded-lg transition-all uppercase tracking-wide"
                                                     >
-                                                        $49 Buy
+                                                        Create & Publish — $49
                                                     </Link>
                                                 </>
                                             )}
