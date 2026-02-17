@@ -44,6 +44,16 @@ export async function POST(req: NextRequest) {
 
         // Create LemonSqueezy checkout
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        const redirectUrl = `${appUrl}/dashboard?payment=success&slug=${slug}`;
+
+        console.log('[Checkout] === DEBUG ENV ===');
+        console.log('[Checkout] NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL);
+        console.log('[Checkout] Resolved appUrl:', appUrl);
+        console.log('[Checkout] Redirect URL:', redirectUrl);
+        console.log('[Checkout] Store ID:', process.env.LEMONSQUEEZY_STORE_ID);
+        console.log('[Checkout] Variant ID:', process.env.LEMONSQUEEZY_VARIANT_ID);
+        console.log('[Checkout] Slug:', slug);
+        console.log('[Checkout] =================');
 
         const checkoutPayload = {
             data: {
@@ -55,7 +65,7 @@ export async function POST(req: NextRequest) {
                         },
                     },
                     product_options: {
-                        redirect_url: `${appUrl}/dashboard?payment=success&slug=${slug}`,
+                        redirect_url: redirectUrl,
                     },
                 },
                 relationships: {
